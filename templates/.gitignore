@@ -33,5 +33,10 @@ test-results/
 .DS_Store
 Thumbs.db
 
+# AI agent tool state — personal, machine-specific (permissions, local settings, session
+# state). Repo-distributed skills/conventions belong under .agents/, which is tracked.
+.claude/
+.codex/
+
 # Local notes (never tracked, agent scratch space)
 .local-notes/

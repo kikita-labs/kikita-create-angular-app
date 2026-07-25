@@ -17,7 +17,7 @@ is genuinely true — do not check a box you didn't verify.
 ## Tooling
 
 - [ ] `.gitignore` present and covers `node_modules`, `dist`, `.angular/cache`, env files,
-      lockfiles of the *other* package managers.
+      lockfiles of the *other* package managers, `.claude/`, `.codex/`.
 - [ ] `.editorconfig`, `.prettierrc`, `.prettierignore`, `.vscode/extensions.json` present.
 - [ ] `.nvmrc` present with the real Node version, not the `{{NODE_VERSION}}` placeholder.
 - [ ] ESLint flat config present (`@angular-eslint` recommended + `typescript-eslint`
