@@ -15,7 +15,8 @@ Kind is one of: `service`, `guard`, `interceptor`.
 
 ## Adding an entry
 
-1. Build it under `src/app/core/`.
+1. Build it under `src/app/core/<kind>/` (`guards/`, `interceptors/`, or `services/` — see
+   `../architecture/folder-structure.md`).
 2. Add a row to the table above.
 3. If it has a non-trivial API or wiring (e.g. an interceptor's behavior, a service's
    public methods), create `.agents/core/<name>.md`. Simple guards/services can rely on the
