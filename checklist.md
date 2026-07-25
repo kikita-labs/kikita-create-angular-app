@@ -54,7 +54,7 @@ is genuinely true — do not check a box you didn't verify.
       otherwise.
 - [ ] `.agents/agent-surface.md` present only if mandatory JSDoc was chosen.
 - [ ] `.agents/mcp.md` lists every MCP server actually installed (angular-mcp + any UI-lib
-      MCP), with the Claude (`.mcp.json`) vs Codex (`.codex/config`) split explained.
+      MCP), with the Claude (`.mcp.json`) vs Codex (`.codex/config.toml`) split explained.
 - [ ] `.agents/documentation.md` (the "how to write/maintain docs" master file) exists and
       is linked from `AGENTS.md`.
 - [ ] No Cyrillic or mojibake in any tracked file, including JSDoc.

@@ -74,7 +74,7 @@ if a step doesn't apply (e.g. no UI library chosen), mark it skipped explicitly 
 
 8. **Wire `mcp` config** in the new project itself, not just install:
    - Claude Code: `.mcp.json` at project root.
-   - Codex: `.codex/config`.
+   - Codex: `.codex/config.toml`.
    Both should end up with the same server entries; generate whichever the current agent
    runtime uses, and mention the other in `.agents/mcp.md` so a future agent on the other
    runtime knows to add it.

@@ -4,7 +4,10 @@ MCP config location differs by agent runtime — both must be kept in sync when 
 added or removed:
 
 - Claude Code: `.mcp.json` at the project root.
-- Codex: `.codex/config`.
+- Codex: `.codex/config.toml` (project-scoped; only loads for trusted projects) or
+  `~/.codex/config.toml` (user-global, applies to every project). This is separate from
+  where Codex looks for *skills* (`.agents/skills`, not `.codex/`) — don't conflate the
+  two.
 
 ## Installed servers
 
@@ -31,6 +34,6 @@ project bug.
 ## Review Checklist
 
 - [ ] Every installed server listed here matches what's actually in `.mcp.json` /
-      `.codex/config`.
+      `.codex/config.toml`.
 - [ ] Both config locations exist for any server the current runtime added, or the other
       runtime's config is explicitly noted as "add if you're on Codex/Claude".
