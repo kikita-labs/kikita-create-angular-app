@@ -34,16 +34,19 @@ git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
   ~/.claude/skills/kikita-create-angular-app
 ```
 
-**Project-scoped (this project only):**
+**Project-scoped (this project only, committed to the repo):**
 
 ```sh
 git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
   .claude/skills/kikita-create-angular-app
 ```
 
-Restart Claude Code (or start a new session) so it picks up the new skill.
+Claude Code picks up new/changed skills under `~/.claude/skills/` and `.claude/skills/`
+live, within the current session — no restart needed.
 
 ### Codex
+
+**Personal (all your projects):**
 
 ```sh
 git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
@@ -51,6 +54,16 @@ git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
 ```
 
 (`$CODEX_HOME` defaults to `~/.codex` if unset.)
+
+**Project-scoped:**
+
+```sh
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
+  .codex/skills/kikita-create-angular-app
+```
+
+Unlike Claude Code, Codex does **not** reload skills live — restart Codex after installing
+or updating one.
 
 ## Use
 
