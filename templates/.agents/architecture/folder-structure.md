@@ -4,6 +4,9 @@
 src/
   app/
     core/            # app-wide singletons: guards, interceptors, root services
+      guards/        # route guards (CanActivateFn, etc.)
+      interceptors/  # HttpInterceptorFn functions
+      services/      # app-wide singleton services (@Service, providedIn: root)
       platform/      # SSR-safe browser-API adapters, if SSR was chosen — see platform-adapter.md
     shared/
       ui/            # reusable components/directives/pipes — see .agents/shared/README.md
@@ -62,7 +65,17 @@ src/
   feature directly — promote it to `shared/ui/` or `shared/utilities/` first, with a doc
   entry, if it needs reuse.
 - `core/` is for things that exist exactly once for the whole app (auth interceptor, root
-  error handler) — not a dumping ground for "things that didn't fit elsewhere".
+  error handler) — not a dumping ground for "things that didn't fit elsewhere". Split by
+  kind, same reasoning as the `shared/ui`/`shared/utilities` split: `guards/`,
+  `interceptors/`, `services/` (plus `platform/` if SSR). Don't leave singleton files flat
+  directly under `core/` once there's more than one of a kind — one guard and one service
+  in two different flat files is still "two kinds", not "not enough to bother splitting".
+- One responsibility per service (see `code-style/rxjs-and-signals.md`, "Service Shape") —
+  a service that wraps HTTP calls for three unrelated domains is three services wearing one
+  name. Split a growing HTTP-client service by domain (e.g. `user-api.service.ts`,
+  `missions-api.service.ts`) once it's doing more than one thing, even though every one of
+  them still lives in `core/services/` — this is a file-organization split, not a
+  layer-direction change, so it doesn't need an ADR by itself.
 
 ## Review Checklist
 
@@ -71,6 +84,8 @@ src/
 - [ ] Nothing under `shared/utilities/` imports from `@angular/*`.
 - [ ] `app.routes.ts`/`app.config.ts` stay at `src/app/`, not moved into a `bootstrap/`
       folder.
-- [ ] Nothing added to `core/` that isn't a genuine app-wide singleton concern.
+- [ ] Nothing added to `core/` that isn't a genuine app-wide singleton concern; guards,
+      interceptors, and services each live in their own `core/<kind>/` subfolder.
+- [ ] No service mixes more than one unrelated responsibility — split by domain instead.
 - [ ] No secret value committed under `environments/` or anywhere else tracked — secrets
       come from env vars/CI secrets, never from a file in the repo.
