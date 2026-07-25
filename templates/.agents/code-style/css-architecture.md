@@ -28,6 +28,11 @@ CSS engine: {{CSS}}.
   `index.ts` barrels for TS.
 - One single entrypoint stylesheet imports every layer file, in layer-declaration order.
   Don't scatter ad-hoc `<style>` imports that bypass it.
+- No inline styles (`[style]` binding or `style="..."` attribute) in templates. They bypass
+  the layer cascade and the token contract, and can't be overridden by `@layer` rules. Use
+  a class in the matching layer instead; if the value is truly dynamic and can't be a static
+  class, bind a CSS custom property (`[style.--foo]`) and consume it via `var(--foo)` inside
+  a real stylesheet rule.
 
 ## Review Checklist
 
@@ -35,3 +40,5 @@ CSS engine: {{CSS}}.
 - [ ] No `!important` used to fight another layer's specificity.
 - [ ] No hardcoded size/color — goes through a `var(--{{PREFIX}}-*)` token.
 - [ ] New style file is imported from the single entrypoint, in the right layer order.
+- [ ] No `[style]`/`style="..."` in templates — dynamic values go through a CSS custom
+      property, not an inline style.
