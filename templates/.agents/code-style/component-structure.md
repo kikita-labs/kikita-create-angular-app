@@ -132,6 +132,7 @@ componentName/
 ## Styling
 
 - No hardcoded sizes or colors in component styles.
+<!-- SCAFFOLD: keep this whole block only if CSS=native or CSS=SCSS -->
 <!-- SCAFFOLD: keep this bullet only if a UI library was chosen -->
 - Prefer {{UI_LIB}} primitives and its CSS variables first.
 - Where no library covers it, use this project's own token scale — CSS custom properties
@@ -139,6 +140,15 @@ componentName/
   value in a component stylesheet.
 - Component styles live inside the `{{PREFIX}}.components` `@layer` — see
   `css-architecture.md` for the full layering rules.
+<!-- SCAFFOLD: keep this whole block only if CSS=Tailwind -->
+<!-- SCAFFOLD: keep this bullet only if a UI library was chosen -->
+- Prefer {{UI_LIB}} primitives first; they carry their own Tailwind-compatible classes/vars.
+- Where no library covers it, use Tailwind utility classes in the template, reading from the
+  `@theme` scale in `styles/tailwind.css` — never a raw px/hex value or an arbitrary-value
+  bracket (`w-[13px]`) as a substitute for a missing token; add the token to `@theme` instead.
+- No inline `[style]`/`style="..."` and no per-component stylesheet for anything utilities
+  already cover. A `componentName.css` file is only for the rare rule Tailwind utilities
+  genuinely can't express (e.g. a keyframe animation) — see `css-architecture.md`.
 
 ## Review Checklist
 

@@ -2,6 +2,7 @@
 
 CSS engine: {{CSS}}.
 
+<!-- SCAFFOLD: keep this whole block only if CSS=native or CSS=SCSS -->
 - Use native CSS `@layer` to order cascade priority explicitly, instead of relying on
   source order or specificity fights.
 <!-- SCAFFOLD: keep only if a UI library was chosen -->
@@ -42,3 +43,40 @@ CSS engine: {{CSS}}.
 - [ ] New style file is imported from the single entrypoint, in the right layer order.
 - [ ] No `[style]`/`style="..."` in templates — dynamic values go through a CSS custom
       property, not an inline style.
+
+<!-- SCAFFOLD: keep this whole block only if CSS=Tailwind -->
+- Styling is utility-first: compose Tailwind classes directly in templates instead of
+  writing per-component stylesheets. Tailwind generates its own cascade layers
+  (`@layer theme, base, components, utilities`) via the single `@import "tailwindcss"` in
+  `src/styles/tailwind.css` — do not hand-roll a parallel `@layer {{PREFIX}}.*` scheme
+  alongside it; there is one layer system, and it's Tailwind's.
+- Design tokens live in the `@theme` block of `src/styles/tailwind.css`
+  (`--color-{{PREFIX}}-fg-muted`, `--spacing-{{PREFIX}}-3`, etc.), not as hand-written
+  `:root` custom properties — Tailwind turns each `@theme` entry into both a CSS variable
+  and a utility class (`text-{{PREFIX}}-fg-muted`), so there is exactly one place a token
+  is defined.
+<!-- SCAFFOLD: keep only if a UI library was chosen -->
+- {{UI_LIB}} owns its own `@theme`/class names — extend them in this project's `@theme`
+  block rather than duplicating; don't fight the library's utilities with `!important`.
+- No hardcoded size/color values (px, hex, rgb literals) in templates or the rare
+  component stylesheet — every value goes through a Tailwind utility backed by `@theme`,
+  never an arbitrary-value bracket (`w-[13px]`, `text-[#333]`) as a substitute for a
+  missing token; add the token to `@theme` instead.
+- No inline styles (`[style]` binding or `style="..."` attribute) in templates — express
+  the value as a utility class instead. If the value is genuinely dynamic and can't be a
+  static class (e.g. a computed width), bind a CSS custom property (`[style.--foo]`) and
+  consume it from a utility via an arbitrary-value reference (`w-[var(--foo)]`), not a raw
+  literal.
+- A per-component stylesheet is the exception, not the default — only for what Tailwind
+  utilities genuinely can't express (e.g. a `@keyframes` block). When one exists, it still
+  participates in Tailwind's own layers; don't declare a competing `@layer` order.
+
+## Review Checklist
+
+- [ ] No hand-rolled `@layer {{PREFIX}}.*` order — Tailwind's own layers are used as-is.
+- [ ] New design tokens are added to the `@theme` block, not as ad-hoc `:root` variables.
+- [ ] No hardcoded size/color and no arbitrary-value bracket standing in for a missing
+      token.
+- [ ] No `[style]`/`style="..."` in templates — dynamic values go through a bound CSS
+      custom property consumed via an arbitrary-value utility, not an inline style.
+- [ ] A per-component stylesheet exists only for what utilities can't express.

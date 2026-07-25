@@ -21,7 +21,11 @@ When done, run through `checklist.md` before telling the user it's finished.
 
 Ask the user, one round, all at once:
 
-1. **CSS**: native CSS (custom properties) or SCSS?
+1. **CSS**: native CSS (custom properties), SCSS, or Tailwind CSS?
+   - Tailwind is a structurally different branch, not a flavor of the other two: no
+     `@layer {{PREFIX}}.*` scheme, no hand-written `:root` tokens, no SCSS mixins — see the
+     `CSS=Tailwind` scaffold blocks in `templates/.agents/code-style/css-architecture.md`,
+     `component-structure.md`, and `templates/.agents/architecture/folder-structure.md`.
 2. **UI library**: `@kikita-labs/ui`, Taiga UI, PrimeNG, or none (build a local token-based UI set)?
    - If a library is chosen: look up whether it ships an `ng add` schematic and/or an MCP
      server. Prefer the schematic. If it has an MCP, install it (see `plan.md` step 4).
@@ -61,10 +65,11 @@ Two different things happen with questionnaire answers, don't conflate them:
   behind: `{{PREFIX}}`, `{{PROJECT_NAME}}`, `{{CSS}}`, `{{CSS_EXT}}`, `{{UI_LIB}}`,
   `{{UI_LIB_MCP_NAME}}`, `{{UI_LIB_MCP_PURPOSE}}`, `{{TESTS}}`, `{{GIT_POLICY}}`,
   `{{PACKAGE_MANAGER}}`, `{{NODE_VERSION}}`, `{{I18N_APPROACH}}`, `{{DATE}}`.
-- **Inclusion gates** — SSR, i18n, mandatory-JSDoc, and UI-library answers don't fill a
-  placeholder; they decide whether a whole file (or a `<!-- SCAFFOLD -->`-marked block
-  inside one) is copied at all. A "no" answer means the file/block is deleted, not filled
-  with an empty string. Gated files must still be linked from `AGENTS.md` / the relevant
+- **Inclusion gates** — SSR, i18n, mandatory-JSDoc, UI-library, and CSS-engine answers don't
+  fill a placeholder; they decide whether a whole file (or a `<!-- SCAFFOLD -->`-marked block
+  inside one) is copied at all. A "no" answer (or, for CSS, the two non-chosen engines)
+  means the file/block is deleted, not filled with an empty string. Gated files must still
+  be linked from `AGENTS.md` / the relevant
   README when kept, and their links removed when skipped.
 
 ## 3. Verify
