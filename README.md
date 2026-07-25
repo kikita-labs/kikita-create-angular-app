@@ -42,28 +42,32 @@ git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
 ```
 
 Claude Code picks up new/changed skills under `~/.claude/skills/` and `.claude/skills/`
-live, within the current session — no restart needed.
+live, within the current session — no restart needed, unless the top-level `.claude/skills/`
+directory didn't exist yet when the session started (in that case restart once so Claude
+Code starts watching the new directory).
 
 ### Codex
 
-**Personal (all your projects):**
+Codex does **not** use `$CODEX_HOME` or `.codex/skills` for skills — that's a common but
+incorrect claim floating around. The real locations, per Codex's own docs:
+
+**User scope (all your projects):**
 
 ```sh
 git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
-  "$CODEX_HOME/skills/kikita-create-angular-app"
+  "$HOME/.agents/skills/kikita-create-angular-app"
 ```
 
-(`$CODEX_HOME` defaults to `~/.codex` if unset.)
-
-**Project-scoped:**
+**Repo scope (this project, and any subdirectory under it):**
 
 ```sh
 git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
-  .codex/skills/kikita-create-angular-app
+  .agents/skills/kikita-create-angular-app
 ```
 
-Unlike Claude Code, Codex does **not** reload skills live — restart Codex after installing
-or updating one.
+Codex scans `.agents/skills` in the current directory and every parent up to the repo
+root, so this also works from a subfolder of a larger repo. If a newly installed or
+updated skill doesn't show up, restart Codex.
 
 ## Use
 
