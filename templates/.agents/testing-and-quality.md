@@ -31,6 +31,17 @@ level — see `git-policy.md` for exactly which of these run on commit vs on pus
   can't import another feature directly and `shared`/`core` can't import "up" into
   `features/` — see `architecture/README.md`. Put `eslint-config-prettier` last in the
   config array so no ESLint stylistic rule fights Prettier's formatting.
+- **Typed vs. untyped linting**: `strict-type-checked` needs `parserOptions.project`, which
+  needs every linted file to actually be inside a `tsconfig` project. Split the flat config
+  into two blocks instead of pointing one `project` at everything:
+  - `src/**/*.ts` → type-checked, `project: './tsconfig.app.json'` (or equivalent).
+  - `e2e/**/*.ts` (if e2e tests were chosen) and root-level `*.ts` config files
+    (`playwright.config.ts`, `eslint.config.js` itself) → a separate, non-type-checked
+    block. These files usually live outside the app's `tsconfig`, and pointing typed rules
+    at them either fails to parse or drags them into a project they don't belong to.
+  - `eslint.config.js` itself also needs excluding from the *typed* block specifically even
+    if it's covered by a general `ignores` — a CommonJS `require()` inside it will conflict
+    with `strict-type-checked`'s module rules otherwise.
 - **Prettier**: config lives in `.prettierrc` at the project root (`singleQuote: true`,
   `printWidth: 100`, Angular HTML template support via the `angular` parser override, and
   `"htmlWhitespaceSensitivity": "ignore"` so sibling-tag blank lines survive formatting —
@@ -59,11 +70,20 @@ level — see `git-policy.md` for exactly which of these run on commit vs on pus
 The "English only, no Cyrillic/mojibake" rule (see `git-policy.md`, `AGENTS.md`) is backed
 by a real check, not just eyeballing: add a `lint-staged` entry (or a standalone
 `{{PACKAGE_MANAGER}} run check:i18n-leak` script) that greps staged text files for
-non-ASCII letters outside string literals meant to hold user-facing translated content —
-for a project without i18n this is simply "no non-ASCII letters in tracked files at all";
-a one-line `grep -PIrn '[^\x00-\x7F]'` over staged files, excluding binary/lockfiles, is
-enough. Wire it into the `pre-commit` Husky hook alongside `lint-staged` so it's non-
-optional, not something `git diff --check` catches only when someone remembers to look.
+Cyrillic characters specifically.
+
+**Do not match "all non-ASCII"** (`[^\x00-\x7F]`) — that also flags legitimate typography
+this project's own docs use on purpose (em dash `—`, en dash `–`, curly quotes, `→`, `×`,
+non-breaking spaces). Match the actual Cyrillic Unicode block instead:
+
+```sh
+grep -PIrl '[\x{0400}-\x{04FF}]' -- "$@"
+```
+
+Wire it into the `pre-commit` Husky hook alongside `lint-staged` so it's non-optional, not
+something `git diff --check` catches only when someone remembers to look. See
+`git-policy.md`'s Husky Hooks section for the `sh -e` gotcha when wiring grep into a hook
+script.
 
 ## Build Budgets
 

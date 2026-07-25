@@ -11,13 +11,19 @@ added or removed:
 
 ## Installed servers
 
-- **angular-mcp** — installed first, before any other scaffolding step. Use it for Angular
-  CLI operations (generate, migrations, best-practice lookups) instead of guessing. Call
-  its `list_projects` tool first when workspace context matters (multi-project workspace,
-  unclear which project a command targets) — don't assume there's only one project.
+- **angular-mcp** — installed first, before any other scaffolding step. The Angular CLI
+  ships this itself; the working command is `npx @angular/cli mcp` — no separate package to
+  find or install. Use it for Angular CLI operations (generate, migrations, best-practice
+  lookups) instead of guessing. Call its `list_projects` tool first when workspace context
+  matters (multi-project workspace, unclear which project a command targets) — don't
+  assume there's only one project.
 <!-- SCAFFOLD: repeat this bullet for every additional MCP server installed for the chosen UI library -->
 - **{{UI_LIB_MCP_NAME}}** — {{UI_LIB_MCP_PURPOSE}}. Only present if the project's UI
-  library ships one; remove this bullet if it doesn't apply.
+  library ships one; remove this bullet if it doesn't apply. Finding the real invocation
+  command/args for a UI library's MCP server usually means reading its `package.json`
+  `bin` field (or its own install docs) — don't assume it follows the same
+  `npx <pkg> mcp`-style shape as `angular-mcp`; it's often a direct
+  `node node_modules/<pkg>/<bin-entry>` path instead.
 
 If an MCP server is unavailable or not connected when a task needs it, stop and tell the
 user. Do not silently fall back to guessing at APIs or CLI flags.

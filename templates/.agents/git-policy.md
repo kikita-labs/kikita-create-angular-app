@@ -30,6 +30,18 @@ commit/push can't land even if the agent forgets to run checks manually.
 - `package.json` has a `"prepare": "husky"` script. This is what actually installs the
   hooks — without it, hooks only exist on the machine that ran `husky init` once and
   silently don't exist after a fresh clone + install anywhere else. Never remove it.
+- Husky runs hook scripts with `sh -e`. A `grep` (or any command) that returns non-zero
+  because it found *no match* will abort the whole script under `set -e` if it sits
+  unguarded inside a pipeline, `&&` chain, or command substitution — even when "no match"
+  is the success case you actually wanted. Guard it explicitly:
+  `if grep -q pattern file; then echo "found"; exit 1; fi` — not
+  `grep pattern file && exit 1`. This bites specifically because it only shows up when the
+  check legitimately finds nothing, which is the common case in CI.
+- After creating `.husky/pre-commit` and `.husky/pre-push`, make sure they're actually
+  executable in git's index, not just on disk — a checkout on a filesystem that doesn't
+  track the executable bit (e.g. some Windows setups) can leave the hook non-executable
+  even though `chmod +x` "worked" locally. Verify/fix with:
+  `git update-index --chmod=+x .husky/pre-commit .husky/pre-push`.
 
 ## Commit & push authority
 

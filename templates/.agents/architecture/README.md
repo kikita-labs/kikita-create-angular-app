@@ -28,7 +28,25 @@ Two layers, don't rely on discipline alone:
   `eslint-plugin-boundaries`) blocking cross-feature imports, `shared`/`core` importing "up"
   into `features/`, and — specifically — any `@angular/*` import inside
   `shared/utilities/**` (see `folder-structure.md`). This is cheap to set up at scaffold
-  time and catches violations before review.
+  time and catches violations before review. Shape, using `no-restricted-imports`'
+  `patterns` option:
+
+  ```js
+  {
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          { group: ['@app/features/*/*'], message: 'Import from a feature\'s public surface, not its internals.' },
+          { group: ['@angular/*'], message: 'shared/utilities must stay framework-agnostic.' } // scoped to shared/utilities/** files only
+        ],
+      }],
+    },
+  }
+  ```
+
+  The `@angular/*` pattern needs its own config-array entry with `files:
+  ['src/app/shared/utilities/**']` so it doesn't also block legitimate Angular imports
+  everywhere else.
 - **Once the project grows**: write a small custom `tools/check-boundaries.mjs`-style
   Node script (there's no template for one in this skill — it needs to be written for this
   project's actual folder layout) plus a circular-dependency check (`madge --circular`)

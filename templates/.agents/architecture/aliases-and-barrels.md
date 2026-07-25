@@ -3,7 +3,10 @@
 ## Aliases
 
 - Every top-level source area gets a `tsconfig` path alias (`@app/*`, `@shared/*`,
-  `@core/*`, ...). Configure in `tsconfig.json` `compilerOptions.paths`.
+  `@core/*`, ...). Configure in `tsconfig.json` `compilerOptions.paths`. Don't also set
+  `baseUrl` for this — implicit `baseUrl`-relative module resolution without explicit
+  `paths` is deprecated in current TypeScript; `paths` entries alone (each mapped from the
+  project root) are enough and don't hit the deprecation warning.
 - Use an alias for any import that crosses a folder boundary. Relative imports (`./`,
   `../`) are only for files inside the same feature/component folder.
 - Never write `../../../` chains — if an import needs that, it's crossing a boundary and

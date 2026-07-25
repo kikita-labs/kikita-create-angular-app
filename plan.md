@@ -7,7 +7,9 @@ if a step doesn't apply (e.g. no UI library chosen), mark it skipped explicitly 
    recorded.
 
 2. **Install `angular-mcp` first.** Nothing else happens before this. If it fails or is
-   unavailable, stop and tell the user — do not continue scaffolding blind.
+   unavailable, stop and tell the user — do not continue scaffolding blind. The Angular
+   CLI ships its own MCP server — the working invocation is `npx @angular/cli mcp`; don't
+   go looking for a separate package.
 
 3. **Scaffold the Angular app** with the latest stable Angular CLI (`ng new`), using the
    questionnaire answers: CSS engine, project prefix, SSR on/off, routing enabled,
@@ -46,10 +48,20 @@ if a step doesn't apply (e.g. no UI library chosen), mark it skipped explicitly 
    - Install and configure Husky + `lint-staged`, and add `"prepare": "husky"` to
      `package.json` (this is what actually installs the hooks after a fresh clone):
      `pre-commit` runs `lint-staged` (ESLint `--fix` + Prettier `--write` on staged files
-     only) plus a non-English content check (grep staged files for non-ASCII letters);
+     only) plus a non-English content check (grep staged files for Cyrillic characters
+     specifically, not all non-ASCII — see `templates/.agents/testing-and-quality.md`);
      `pre-push` runs the full `lint` + `format:check` + test gate. See
      `templates/.agents/git-policy.md` and `templates/.agents/testing-and-quality.md` for
-     the exact hook responsibilities.
+     the exact hook responsibilities, including the `sh -e` scripting gotcha.
+   - After writing the hook scripts, run
+     `git update-index --chmod=+x .husky/pre-commit .husky/pre-push` — don't assume a local
+     `chmod +x` survived into git's index on every filesystem.
+   - Create the skeleton folders `src/app/core/`, `src/app/shared/ui/`,
+     `src/app/shared/utilities/`, `src/app/features/` (each with a barrel `index.ts`) and
+     `src/styles/layers.css` wired into the project's global stylesheet — so
+     `templates/.agents/architecture/folder-structure.md` and
+     `templates/.agents/code-style/css-architecture.md` describe what's actually there, not
+     an aspiration.
 
 7. **Generate the documentation tree** from `templates/`:
    - `CLAUDE.md`, `AGENTS.md` at project root.
