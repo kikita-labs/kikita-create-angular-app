@@ -12,10 +12,20 @@ if a step doesn't apply (e.g. no UI library chosen), mark it skipped explicitly 
    go looking for a separate package.
 
 3. **Scaffold the Angular app** with the latest stable Angular CLI (`ng new`), using the
-   questionnaire answers: CSS engine, project prefix, SSR on/off, routing enabled,
-   standalone (default in current Angular — do not pass a deprecated NgModule flag), and
-   the chosen package manager (`--package-manager={{PACKAGE_MANAGER}}`; default `pnpm`
-   unless the user asked for npm/yarn).
+   questionnaire answers: CSS engine (`--style=css` for both native CSS and Tailwind —
+   Tailwind is plain CSS with directives, not a CLI `--style` option; `--style=scss` only
+   if SCSS was chosen), project prefix, SSR on/off, routing enabled, standalone (default in
+   current Angular — do not pass a deprecated NgModule flag), and the chosen package
+   manager (`--package-manager={{PACKAGE_MANAGER}}`; default `pnpm` unless the user asked
+   for npm/yarn).
+   - **If Tailwind was chosen**, right after `ng new`: install `tailwindcss` and
+     `@tailwindcss/postcss` (current Tailwind major uses a PostCSS plugin, not a generated
+     `tailwind.config.js` — verify against Tailwind's current install docs rather than
+     assuming an older `npx tailwindcss init` flow), wire the PostCSS plugin into the
+     project's build (`.postcssrc.json` or the Angular builder's own PostCSS hook —
+     check current Angular CLI support rather than assuming), and replace the generated
+     `src/styles.css` content with a single `@import "tailwindcss";` plus a `@theme` block
+     seeded with the project's prefix-namespaced tokens.
 
 4. **If a UI library was chosen**:
    - Check for an `ng add` schematic first; use it if present.
@@ -57,11 +67,14 @@ if a step doesn't apply (e.g. no UI library chosen), mark it skipped explicitly 
      `git update-index --chmod=+x .husky/pre-commit .husky/pre-push` — don't assume a local
      `chmod +x` survived into git's index on every filesystem.
    - Create the skeleton folders `src/app/core/`, `src/app/shared/ui/`,
-     `src/app/shared/utilities/`, `src/app/features/` (each with a barrel `index.ts`) and
-     `src/styles/layers.css` wired into the project's global stylesheet — so
-     `templates/.agents/architecture/folder-structure.md` and
-     `templates/.agents/code-style/css-architecture.md` describe what's actually there, not
-     an aspiration.
+     `src/app/shared/utilities/`, `src/app/features/` (each with a barrel `index.ts`).
+   - **If CSS=native or CSS=SCSS**: wire `src/styles/layers.css` (the `@layer` order
+     declaration) into the project's global stylesheet as the first import.
+   - **If CSS=Tailwind**: this is already done by step 3's `tailwind.css`/`@theme` setup —
+     do not also create a `layers.css`, Tailwind owns its own layer order.
+   - Either way, `templates/.agents/architecture/folder-structure.md` and
+     `templates/.agents/code-style/css-architecture.md` must describe what's actually
+     there, not an aspiration.
 
 7. **Generate the documentation tree** from `templates/`:
    - `CLAUDE.md`, `AGENTS.md` at project root.

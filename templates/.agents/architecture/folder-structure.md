@@ -23,8 +23,12 @@ src/
     app.routes.ts
     app.config.ts
   styles/
+<!-- SCAFFOLD: keep the next line only if CSS=native or CSS=SCSS -->
     layers.css       # @layer order declaration, imported first
-    mixins/          # SCSS mixins/functions, if SCSS was chosen — see css-architecture.md
+<!-- SCAFFOLD: keep the next line only if CSS=SCSS -->
+    mixins/          # SCSS mixins/functions — see css-architecture.md
+<!-- SCAFFOLD: keep the next line only if CSS=Tailwind -->
+    tailwind.css     # @tailwind/@import directives + @theme tokens, imported first
   environments/      # non-secret, per-target build config (API base URL, feature flags)
 ```
 
@@ -51,6 +55,9 @@ src/
 - SCSS mixins/functions (if SCSS was chosen) live in `styles/mixins/`, not under
   `app/shared/` — they're not TypeScript and aren't part of the `shared/ui`/`shared/
   utilities` import-boundary story.
+<!-- SCAFFOLD: keep the next line only if CSS=Tailwind -->
+- Design tokens (if Tailwind was chosen) live in the `@theme` block of `styles/tailwind.css`,
+  not scattered across component files — see `css-architecture.md`.
 - A feature owns its own components; nothing under `features/<x>/` is imported by another
   feature directly — promote it to `shared/ui/` or `shared/utilities/` first, with a doc
   entry, if it needs reuse.
