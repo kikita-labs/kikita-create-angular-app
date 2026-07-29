@@ -42,8 +42,36 @@
 
 ## Member order
 
-Blank line between every group; a group with nothing to show is skipped, not left as an
-empty gap.
+Blank line between every group **and every subgroup** — including between the `protected`
+half and `private` half of the same numbered group (e.g. between `protected readonly
+signal()` fields and `private readonly signal()` fields). No two declarations from
+different groups or subgroups ever sit on adjacent lines. A group/subgroup with nothing to
+show is skipped, not left as an empty gap — never emit a blank line with nothing above or
+below it.
+
+```ts
+readonly userId = input<string>();
+
+readonly saved = output<void>();
+
+private readonly http = inject(HttpClient);
+
+protected readonly userService = inject(UserService);
+
+protected readonly staticValues = STATIC_VALUES;
+
+private readonly localOnlyValue = 'x';
+
+protected readonly guildId = signal('');
+
+private readonly draftId = signal('');
+
+protected readonly user = toSignal(this.userService.user$);
+
+private readonly rawFeed = toSignal(this.feedService.feed$);
+
+protected readonly isValid = computed(() => this.user() != null);
+```
 
 1. Inputs (`input()`/`model()`).
 2. Outputs (`output()`).
@@ -73,6 +101,10 @@ empty gap.
 - Group statements by purpose; blank line between groups, not inside one.
 - Blank line before and after every `if` block.
 - Collapse a single-statement `if` onto one line: `if (!user) return;`.
+- Exception: a run of consecutive single-line guard `if`s (same shape, one condition/return
+  each, no other statements between them) stays tight — no blank line between them, only
+  before the first and after the last. The tight run reads as one decision table, not
+  separate blocks.
 - Blank line before `return`.
 
 ```ts
@@ -88,6 +120,40 @@ function example() {
   }
 
   return a + b;
+}
+```
+
+```ts
+function statusToVariant(status: Status) {
+  if (status === 'APPROVED') return 'success';
+  if (status === 'REJECTED' || status === 'CANCELLED') return 'danger';
+  if (status === 'IN_PROGRESS' || status === 'REPORT_PENDING') return 'warning';
+
+  return 'info';
+}
+```
+
+## Templates
+
+- A signal (or any other call expression, e.g. a computed) read more than once in the same
+  template gets bound to a local with `@let`, then every subsequent use reads the local, not
+  the signal call again:
+
+```html
+@let userValue = user();
+
+<h1>{{ userValue.name }}</h1>
+<p>{{ userValue.email }}</p>
+```
+
+- A single use stays as a direct call — don't introduce `@let` pre-emptively.
+- When the value being tested by `@if` is itself the value the block needs (e.g. a nullable
+  signal read, checked for truthiness and then used), bind it with `@if (...; as x)` instead
+  of re-reading the signal inside the block:
+
+```html
+@if (currentGuild.icon; as icon) {
+  <kui-avatar [src]="icon" [name]="currentGuild.name" size="lg" shape="square" />
 }
 ```
 
@@ -119,7 +185,15 @@ componentName/
   componentName.ts
   componentName.html
   componentName.{{CSS_EXT}}
+  componentName.opener.ts   # only for a dialog/drawer-style component, see below
 ```
+
+- A dialog or drawer component opened imperatively ({{UI_LIB}}'s dialog/drawer service, if
+  one was chosen) gets a flat `componentName.opener.ts` sibling exporting a single
+  `injectXxx()` function — this is the component's public "how to open it" API, not an
+  internal implementation detail, so it stays flat next to `componentName.ts` rather than
+  inside `helpers/` (`helpers/` is for logic extracted out of the component file for
+  size/decomposition reasons).
 
 - Decomposition is mandatory. Budgets: component/page TypeScript file ~150 lines target,
   200 hard-review threshold; template ~120 lines; stylesheet ~160 lines; a single function
@@ -128,6 +202,17 @@ componentName/
 - Every subfolder gets a barrel `index.ts`.
 - Component file names follow current Angular convention: no `.component` suffix
   (`user-card.ts`, not `user-card.component.ts`); name for what the thing is.
+- The class name drops the suffix too, not just the file: `export class UserCard`, not
+  `export class UserCardComponent`. This matches the Angular CLI's own `ng generate` default
+  since v20 (the `addTypeToClassName` schematic option, defaulted off) — the file-only
+  reading is a common misconception, and the CLI's actual generated code is the source of
+  truth here, not just the style guide prose. Same rule for directives/pipes/services: no
+  `Directive`/`Pipe`/`Service` suffix on the class either.
+  - Known tradeoff: dropping the suffix on both file and class can produce a namespace
+    collision (e.g. `User` the entity type vs. `User` the component class, both imported in
+    the same file). Resolve it with an import alias at the call site
+    (`import { User as UserCard } from './user-card'`) — don't reintroduce the suffix
+    project-wide just to dodge one collision.
 
 ## Styling
 
@@ -164,4 +249,14 @@ componentName/
 - [ ] Component TS ~150 lines target / 200 hard limit, template ~120, stylesheet ~160,
       each function ~30 lines and one responsibility — decompose if over.
 - [ ] No hardcoded size/color values.
+- [ ] Signal/computed called 2+ times in one template bound via `@let` instead of repeated
+      calls.
+- [ ] Value tested and used inside `@if` bound via `@if (...; as x)` instead of re-reading
+      it.
 - [ ] Every subfolder has a barrel `index.ts`.
+- [ ] Class name has no `Component`/`Directive`/`Pipe`/`Service` suffix, matching the file
+      name convention — not just the file, the class too.
+- [ ] Dialog/drawer component's `injectXxx()` opener is a flat `componentName.opener.ts`
+      sibling, not tucked inside `helpers/`.
+- [ ] Consecutive single-line guard `if`s of the same shape have no blank lines between
+      them; blank line only before the first and after the last of the run.

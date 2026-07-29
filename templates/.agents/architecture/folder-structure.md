@@ -1,7 +1,11 @@
 # Folder Structure
 
 ```
+public/             # served at the site root as-is (favicon.ico, robots.txt, manifest) —
+                     # no import path, referenced by absolute URL (e.g. /favicon.ico)
 src/
+  assets/            # static files referenced from code/templates, served under /assets —
+                      # images grouped by domain (assets/<domain>/), not dumped flat
   app/
     core/            # app-wide singletons: guards, interceptors, root services
       guards/        # route guards (CanActivateFn, etc.)
@@ -13,6 +17,7 @@ src/
       utilities/     # framework-agnostic helper functions — no Angular imports
     features/
       <feature-name>/
+        <feature-name>.routes.ts   # feature's own routes — see routing.md
         <component-name>/
           interfaces/
           types/
@@ -43,6 +48,15 @@ src/
   at deploy time, injected outside the repo. See `.env`/`.env.*` handling in
   `../git-policy.md`.
 
+- `public/` vs `src/assets/` — two different jobs, both wired in `angular.json`'s `assets`
+  config (verify the current Angular CLI's actual copy paths rather than assuming):
+  - `public/` is for files the browser or a crawler expects at a fixed root URL —
+    `favicon.ico`, `robots.txt`, a web manifest. Nothing in app code imports from here by
+    path; it's referenced by absolute URL only.
+  - `src/assets/` is for static files the app references from code or templates —
+    images, locale JSON if i18n is used. Group by domain under `assets/<domain>/` rather
+    than dumping every file flat into `assets/`.
+
 - `app.routes.ts` and `app.config.ts` stay directly under `src/app/`, next to the root
   component — this is the Angular CLI's own default layout and what `ng generate`
   schematics expect. Don't nest them under a `bootstrap/` folder; that adds indirection
@@ -61,6 +75,10 @@ src/
 <!-- SCAFFOLD: keep the next line only if CSS=Tailwind -->
 - Design tokens (if Tailwind was chosen) live in the `@theme` block of `styles/tailwind.css`,
   not scattered across component files — see `css-architecture.md`.
+- A feature is a business domain (e.g. `user-profile`, `cart`, `missions`), not a UI
+  component — it's the unit that owns a URL sub-tree and a chunk of the domain, and it can
+  hold several components inside it. Don't create a `features/<x>/` folder per component;
+  group components that serve one domain under one feature folder instead.
 - A feature owns its own components; nothing under `features/<x>/` is imported by another
   feature directly — promote it to `shared/ui/` or `shared/utilities/` first, with a doc
   entry, if it needs reuse.
@@ -84,8 +102,12 @@ src/
 - [ ] Nothing under `shared/utilities/` imports from `@angular/*`.
 - [ ] `app.routes.ts`/`app.config.ts` stay at `src/app/`, not moved into a `bootstrap/`
       folder.
+- [ ] Feature with its own routes has `<feature-name>.routes.ts` inside its folder — see
+      `routing.md` — not routes inlined in `app.routes.ts`.
 - [ ] Nothing added to `core/` that isn't a genuine app-wide singleton concern; guards,
       interceptors, and services each live in their own `core/<kind>/` subfolder.
 - [ ] No service mixes more than one unrelated responsibility — split by domain instead.
 - [ ] No secret value committed under `environments/` or anywhere else tracked — secrets
       come from env vars/CI secrets, never from a file in the repo.
+- [ ] Root-URL files (favicon, robots.txt, manifest) go in `public/`; code/template-
+      referenced static files go in `src/assets/`, grouped by domain, not dumped flat.

@@ -21,6 +21,9 @@
   structural directives (`*ngIf`, `*ngFor`).
 - `@for` always has `track` set to a stable identifier, never the index unless the list has
   no stable identity.
+- `@for` gets an `@empty` block whenever the empty-list case needs its own UI (empty state,
+  "nothing found" message) — don't handle it with a sibling `@if (list.length === 0)`
+  instead.
 - Use class and style bindings (`[class.active]="isActive()"`, `[style.width.px]="w()"`),
   not `ngClass`/`ngStyle`.
 
@@ -29,4 +32,5 @@
 - [ ] Blank line between sibling tags at the same level.
 - [ ] `@if`/`@for`/`@switch` used, not `*ngIf`/`*ngFor`.
 - [ ] `@for` has a real `track` expression.
+- [ ] `@for` with an empty-state UI uses `@empty`, not a separate `@if` on the list length.
 - [ ] No `ngClass`/`ngStyle`; class/style bindings used instead.

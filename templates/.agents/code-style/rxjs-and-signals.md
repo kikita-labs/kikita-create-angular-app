@@ -42,6 +42,50 @@ this.userService
 - Never copy one signal's value into another writable signal when `computed()` already
   expresses the relationship — that's a stale-state bug waiting to happen.
 
+## API/HTTP Service Shape
+
+- A service whose only job is talking to the backend (building requests, calling
+  `HttpClient`, returning the raw response/observable — no derived state, no business
+  logic) is named `<domain>-api.service.ts`, class `<Domain>Api` (no `Service` suffix on
+  the class, per `component-structure.md`'s naming rule) — `guilds-api.service.ts` →
+  `GuildsApi`, where `<domain>` matches the API route section it wraps (`/guilds/...` →
+  `guilds-api.service.ts`).
+- A service that holds state/signals or orchestrates logic keeps the plain
+  `<domain>.service.ts` name, no `-api`/`-http` marker — that marker exists specifically to
+  flag "this one is HTTP-only, nothing else."
+- Always split the two: a service that both calls HTTP and manages derived state/signals is
+  two services wearing one name (same reasoning as "One responsibility per service" above).
+  The logic/state service depends on the `-api` service, not the other way around, and the
+  `-api` service is the only one injecting `HttpClient`.
+- An `-api.service.ts` declares a `private readonly` constant for its endpoint prefix, and
+  every method builds its path off it — never repeat the literal path segment across
+  methods:
+
+```ts
+@Service()
+export class GuildsApi {
+  private readonly http = inject(HttpClient);
+  private readonly basePath = '/guilds';
+
+  getGuild(guildId: string) {
+    return this.http.get<Guild>(`${this.basePath}/${guildId}`);
+  }
+
+  getMembers(guildId: string) {
+    return this.http.get<GuildMember[]>(`${this.basePath}/${guildId}/members`);
+  }
+}
+```
+
+- If a domain ends up with several services that are really one unit from a consumer's
+  point of view (e.g. `guilds-api.service.ts` + `guilds.service.ts` state/logic, or several
+  narrow services split by sub-concern), and components would otherwise have to inject and
+  coordinate all of them individually, add a `<domain>-facade.service.ts` / `<Domain>Facade`
+  in front of them only when that coordination is actually needed by more than one call
+  site — it exposes the combined public API, delegates to the underlying services, and is
+  what features inject instead of the individual pieces. Don't add a facade speculatively
+  for a domain that's still just one or two services with no real coordination to hide.
+
 ## Cross-Feature State
 
 State that's genuinely shared across features (not just reused UI) lives in a `@Service`
@@ -60,3 +104,10 @@ longer keep it manageable — that's a decision worth an ADR (see `../decisions/
 - [ ] Services expose readonly signals + command methods, not raw writable signals.
 - [ ] No signal-copying where `computed()` would do; `effect()` used only for boundary
       side effects.
+- [ ] HTTP-only service named `<domain>-api.service.ts`; logic/state service stays
+      `<domain>.service.ts` — not merged into one class.
+- [ ] `-api.service.ts` has a `private readonly` endpoint-prefix constant; methods build off
+      it instead of repeating the literal path.
+- [ ] Facade service (`<domain>-facade.service.ts`) exists only where multiple services in
+      one domain genuinely need coordinating for more than one call site — not added
+      speculatively.

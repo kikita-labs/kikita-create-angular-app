@@ -6,6 +6,12 @@ dependency shape:
 - `shared/ui/` — components, directives, pipes. Angular-decorated, template-facing.
 - `shared/utilities/` — plain functions/classes. Zero `@angular/*` imports, ever.
 
+A `shared/utilities/*.helper.ts` file is a flat file, not a component with `constants/`/
+`interfaces/` sibling subfolders — that split (`../code-style/component-structure.md`)
+applies to component/feature folders, not here. A lookup table or constant private to one
+helper file (not exported) stays inline in that file. Only pull a constant out into its own
+file if it's exported for reuse by more than the one helper that defines it.
+
 (SCSS mixins, if SCSS was chosen, live in `styles/mixins/` — not here, and not registered
 in this table. See `../code-style/css-architecture.md`.)
 
