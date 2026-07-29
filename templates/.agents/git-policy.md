@@ -25,8 +25,18 @@ commit/push can't land even if the agent forgets to run checks manually.
   `{{PACKAGE_MANAGER}} run format:check`, then the configured test suite(s), all
   repo-wide. This is the same list as "Before every push" in `testing-and-quality.md`;
   Husky just makes it non-optional.
-- Do not bypass hooks with `--no-verify` to get an unrelated commit through. If a hook is
-  blocking on something unrelated to your change, fix or report it — don't skip it.
+- Never bypass hooks with `--no-verify`, for any reason, even a hook failure that looks
+  unrelated to the change being committed. If a hook is blocking on something unrelated,
+  fix it or stop and report it to the user — don't skip it. This applies even with explicit
+  user sign-off in the moment; get the underlying failure fixed (or the hook itself
+  corrected) instead of routing around it.
+- If this project's pre-commit/pre-push runs a monorepo-wide task (e.g. `turbo run lint`
+  across every package, not just the ones touched), a pre-existing failure in an unrelated
+  package blocks every commit anywhere in the repo, including a docs-only change. A build
+  tool's cache (e.g. turbo) can also mask this for a while — a package that "passed" stays
+  cached until something invalidates it — so the failure can surface on an unrelated commit
+  long after the actual regression landed. Don't assume a failing package was broken by the
+  current change just because it's the first time you're seeing the error.
 - `package.json` has a `"prepare": "husky"` script. This is what actually installs the
   hooks — without it, hooks only exist on the machine that ran `husky init` once and
   silently don't exist after a fresh clone + install anywhere else. Never remove it.
@@ -61,3 +71,4 @@ commit/push can't land even if the agent forgets to run checks manually.
 - [ ] No AI attribution anywhere in the message.
 - [ ] Message is English, concise, describes the *why* when it isn't obvious from the diff.
 - [ ] Commit/push authority above matches what was actually done.
+- [ ] No `--no-verify` used anywhere in this session's commits.
