@@ -3,4 +3,6 @@
 Thumbs.db
 
 # IDE
-.idea/
+.idea/*
+!.idea/icon.svg
+!.idea/icon_dark.svg
