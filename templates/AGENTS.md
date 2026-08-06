@@ -50,7 +50,9 @@ also read:
 - CSS: {{CSS}}. Never hardcode sizes or colors in a component; use the design-token
   variables described in `.agents/code-style/component-structure.md`.
 <!-- SCAFFOLD: keep the next line only if a UI library was chosen -->
-- UI library: {{UI_LIB}}. Prefer its primitives over hand-rolled markup.
+- UI library: {{UI_LIB}}. Prefer its primitives over hand-rolled markup, layout-only
+  styling, typography via its primitive if it has one. See
+  `.agents/code-style/ui-library-usage.md` — always read when a UI library was chosen.
 - Routing uses enums for route paths/names, never bare string literals scattered across
   files. See `.agents/architecture/routing.md`.
 - Path aliases are mandatory for cross-boundary imports. See

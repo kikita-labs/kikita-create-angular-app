@@ -16,7 +16,10 @@
 
 - Every folder that contains at least one `.ts` file gets a barrel `index.ts`, including
   component subfolders (`interfaces/`, `types/`, `constants/`, `enums/`, `helpers/`,
-  `tokens/`).
+  `tokens/`) — except a feature root (`features/<feature-name>/`). Nothing outside that
+  feature imports its files directly (see `folder-structure.md`), and `app.routes.ts` /
+  a parent's `<feature-name>.routes.ts` load the routes file itself via `loadChildren`,
+  not through a barrel — so a feature-root `index.ts` would have no consumer.
 - A barrel exports only what's meant for outside consumers — explicit named exports, never
   `export *`. Type-only exports use `export type { Foo }`.
 - A barrel must not import from its own parent folder.
@@ -27,6 +30,7 @@
 ## Review Checklist
 
 - [ ] No `../../../`-style relative chains crossing a folder boundary.
-- [ ] Every `.ts`-containing folder has an `index.ts`.
+- [ ] Every `.ts`-containing folder has an `index.ts`, except a feature root
+      (`features/<feature-name>/`).
 - [ ] Barrels use explicit named exports; type-only exports use `export type`.
 - [ ] No import cycle introduced between barrels or features.

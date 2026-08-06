@@ -9,8 +9,13 @@ blank-line rules below aren't enforced by it and are on you to apply and check i
 - [component-structure.md](./component-structure.md) — class member order, visibility,
   styling via tokens.
 - [rxjs-and-signals.md](./rxjs-and-signals.md) — when to use RxJS vs signals.
+- [forms-and-inputs.md](./forms-and-inputs.md) — Signal Forms vs `ngModel`, schema/validator
+  reuse, model typing.
 - [css-architecture.md](./css-architecture.md) — `@layer` cascade layers, design tokens,
   single stylesheet entrypoint.
+<!-- SCAFFOLD: keep only if a UI library was chosen -->
+- [ui-library-usage.md](./ui-library-usage.md) — primitive/reuse precedence, layout-only
+  styling, typography primitives.
 
 Adding a new code-style doc: only when a rule doesn't fit naturally into one of the above.
 Link it here immediately.

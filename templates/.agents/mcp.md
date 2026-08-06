@@ -17,6 +17,11 @@ added or removed:
   lookups) instead of guessing. Call its `list_projects` tool first when workspace context
   matters (multi-project workspace, unclear which project a command targets) — don't
   assume there's only one project.
+When a UI library is chosen at scaffold time, search the web (its docs, README, or package
+registry page) for "`{{UI_LIB}}` MCP server" before finishing setup — do not assume it has
+none just because it isn't listed below yet. If it ships one, install it and add a bullet
+for it here in the same change.
+
 <!-- SCAFFOLD: repeat this bullet for every additional MCP server installed for the chosen UI library -->
 - **{{UI_LIB_MCP_NAME}}** — {{UI_LIB_MCP_PURPOSE}}. Only present if the project's UI
   library ships one; remove this bullet if it doesn't apply. Finding the real invocation
