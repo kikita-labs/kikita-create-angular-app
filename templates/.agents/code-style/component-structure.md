@@ -24,12 +24,59 @@
 - Forms use the Signal Forms API (`form()`) — not Reactive Forms (`FormGroup`/
   `FormControl`) and not template-driven forms (`ngModel`). If Signal Forms can't cover a
   specific need, stop and say so instead of silently falling back to Reactive Forms.
+  - One form has **one** model signal holding the whole shape (an object with every field),
+    wrapped once in `form()` — never one `signal()` per field. `form()` gives back a
+    `Field`/`FieldTree` whose properties (`userForm.name`, `userForm.email`) are themselves
+    the per-field reactive state; that's the fine-grained reactivity, not ten separate
+    top-level signals:
+
+    ```ts
+    protected readonly userForm = form(signal({ name: '', email: '', age: 0 }), (path) => {
+      required(path.name);
+      email(path.email);
+      min(path.age, 0);
+    });
+    ```
+
+  - Bind each field with the `[field]` directive (`<input [field]="userForm.name" />`) —
+    never `[(ngModel)]="userForm.name()"`, never a manual `[value]`/`(input)` pair, and
+    never a standalone `signal()` per input reassembled into an object on submit. If you
+    find yourself writing `formSignal = signal({...})` next to ten sibling
+    `nameSignal`/`emailSignal`-style fields bound with `ngModel`, that's the Reactive-
+    Forms-shaped anti-pattern this rule exists to prevent — collapse it to the single
+    `form()` + `[field]` shape above.
   - Validation constraints (`min()`, `max()`, `required()`, etc.) go in the form schema,
     never as native HTML attributes (`min`, `max`, `required`) on a `[field]`-bound
     element — Angular derives the DOM attributes and ARIA wiring from the schema; setting
     both duplicates the source of truth and can disagree with it.
   - Render field errors with `@if`, never `[hidden]` — hidden-but-present text isn't
     reliably picked up by assistive tech, and `@if` actually removes it from the DOM.
+  - Signal Forms is a newer, still-evolving Angular API — verify exact schema/validator
+    function names and the submit helper's current shape via `angular-mcp`
+    (`get_best_practices`/`search_documentation`, see `../mcp.md`) rather than guessing from
+    an older or remembered version of the API.
+  - Submit through the `submit()` helper, not a hand-rolled `(ngSubmit)`/manual
+    `.value()`-read-and-POST — it runs validation, tracks `submitting()`, and calls the
+    action only once sync validation passes. Route server-side field errors back onto the
+    form by returning them from the action, targeted with `fieldTree`, instead of setting a
+    separate error signal per field by hand:
+
+    ```ts
+    submit(userForm, async (f) => {
+      const result = await this.userApi.save(f().value());
+      if (result.kind === 'error') {
+        return result.errors.map((err) => ({
+          kind: 'server',
+          message: err.message,
+          fieldTree: f[err.field as keyof typeof f],
+        }));
+      }
+      return undefined;
+    });
+    ```
+
+    These submission errors clear automatically when the user edits the field — don't add
+    manual clearing logic for them.
 - Use `inject()` for dependencies, not constructor-parameter injection — see the member
   order below; `inject()` calls are their own ordered group, constructor stays for actual
   initialization logic.
@@ -178,6 +225,7 @@ componentName/
     index.ts
   helpers/
     helper1.ts
+    componentName.schema.ts  # only for a component that owns a Signal Form, see below
     index.ts
   tokens/
     token1.ts        # every token ships with a provider function alongside it
@@ -194,6 +242,13 @@ componentName/
   internal implementation detail, so it stays flat next to `componentName.ts` rather than
   inside `helpers/` (`helpers/` is for logic extracted out of the component file for
   size/decomposition reasons).
+- A component that owns a Signal Form has its schema function live in
+  `helpers/componentName.schema.ts` (barrel-exported like any other helper), unlike
+  `.opener.ts` above — the schema is only ever consumed by the component's own `form()`
+  call, never imported by another component, so it's exactly the "logic extracted out of
+  the component file" `helpers/` is for, not a public cross-component contract. See
+  `forms-and-inputs.md` for what goes in it and where the form model's default-state
+  constant goes instead (`constants/`, not the schema file).
 
 - Decomposition is mandatory. Budgets: component/page TypeScript file ~150 lines target,
   200 hard-review threshold; template ~120 lines; stylesheet ~160 lines; a single function
@@ -243,6 +298,10 @@ componentName/
 - [ ] No `@HostBinding`/`@HostListener`; `host` metadata object used instead.
 - [ ] No constructor-parameter injection; `inject()` used instead.
 - [ ] Any form uses Signal Forms (`form()`), not `FormGroup`/`FormControl`/`ngModel`.
+- [ ] One `form()` wrapping one model signal for the whole form — not one `signal()` per
+      field reassembled by hand; fields bound with `[field]`, not `[(ngModel)]`.
+- [ ] Form submission goes through `submit()`, not a hand-rolled handler; server field
+      errors are routed via `fieldTree` in the action's return, not a manual error signal.
 - [ ] New service classes use `@Service`, not `@Injectable`, unless a documented DI edge
       case requires the latter.
 - [ ] No `any`, no broad casts; `unknown` + narrowing used where the type is uncertain.
@@ -258,5 +317,8 @@ componentName/
       name convention — not just the file, the class too.
 - [ ] Dialog/drawer component's `injectXxx()` opener is a flat `componentName.opener.ts`
       sibling, not tucked inside `helpers/`.
+- [ ] Signal Form's schema function lives in `helpers/componentName.schema.ts`, not a flat
+      sibling; the form model's default-state constant lives in `constants/`, not inline in
+      the schema file or the component.
 - [ ] Consecutive single-line guard `if`s of the same shape have no blank lines between
       them; blank line only before the first and after the last of the run.

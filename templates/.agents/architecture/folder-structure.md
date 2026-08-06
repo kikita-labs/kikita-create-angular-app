@@ -18,21 +18,43 @@ src/
     features/
       <feature-name>/
         <feature-name>.routes.ts   # feature's own routes — see routing.md
-        <component-name>/
-          interfaces/
-          types/
-          constants/
-          enums/
-          helpers/
-          tokens/
-          <component-name>.ts
-          <component-name>.html
-          <component-name>.{{CSS_EXT}}
+        interfaces/        # only for a piece shared by 2+ components within this feature —
+        types/              # a single component's own interface/type/etc stays co-located
+        constants/           # inside that component's own subfolder instead (see below)
+        enums/
+        helpers/
+        services/            # feature-scoped services used by 2+ of this feature's components
+        pages/
+          <page-name>/        # entry component — loaded by <feature-name>.routes.ts
+            interfaces/
+            types/
+            constants/
+            enums/
+            helpers/
+            tokens/
+            <page-name>.ts
+            <page-name>.html
+            <page-name>.{{CSS_EXT}}
+        components/
+          index.ts             # aggregator barrel — explicit named re-exports of each
+                                # <component-name>/ barrel below, see aliases-and-barrels.md
+          <component-name>/    # non-routed component, used within this feature
+            interfaces/
+            types/
+            constants/
+            enums/
+            helpers/
+            tokens/
+            <component-name>.ts
+            <component-name>.html
+            <component-name>.{{CSS_EXT}}
     app.routes.ts
     app.config.ts
   styles/
 <!-- SCAFFOLD: keep the next line only if CSS=native or CSS=SCSS -->
-    layers.css       # @layer order declaration, imported first
+    layers.{{CSS_EXT}}  # @layer order declaration, imported first
+<!-- SCAFFOLD: keep the next line only if CSS=native or CSS=SCSS and no UI library typography primitive is used -->
+    typography.{{CSS_EXT}}  # typography tokens (font-size/line-height/weight), see css-architecture.md
 <!-- SCAFFOLD: keep the next line only if CSS=SCSS -->
     mixins/          # SCSS mixins/functions — see css-architecture.md
 <!-- SCAFFOLD: keep the next line only if CSS=Tailwind -->
@@ -71,7 +93,9 @@ src/
   `../testing-and-quality.md`).
 - SCSS mixins/functions (if SCSS was chosen) live in `styles/mixins/`, not under
   `app/shared/` — they're not TypeScript and aren't part of the `shared/ui`/`shared/
-  utilities` import-boundary story.
+  utilities` import-boundary story. The pattern isn't limited to mixins: any grouped set of
+  tokens that needs its own file (layer order, typography) lives under `styles/`, imported
+  once from the entrypoint — see `css-architecture.md`.
 <!-- SCAFFOLD: keep the next line only if CSS=Tailwind -->
 - Design tokens (if Tailwind was chosen) live in the `@theme` block of `styles/tailwind.css`,
   not scattered across component files — see `css-architecture.md`.
@@ -82,6 +106,36 @@ src/
 - A feature owns its own components; nothing under `features/<x>/` is imported by another
   feature directly — promote it to `shared/ui/` or `shared/utilities/` first, with a doc
   entry, if it needs reuse.
+- Every component inside a feature — routed or not — gets its own `<name>/` folder with the
+  same internal shape (`interfaces/`, `types/`, etc. next to `<name>.ts`). There is no flat
+  exception for the component a feature's route loads; it's a component like any other, just
+  the one wired up in `<feature-name>.routes.ts`.
+- `components/` gets its own aggregator `index.ts`, re-exporting each `<component-name>/`
+  barrel with explicit named exports (never `export *` — same rule as any other barrel, see
+  `aliases-and-barrels.md`). This is the one kind-folder that gets an aggregator on top of
+  its leaf barrels — reusable components are imported often enough across a feature's pages
+  and other components that a single import path (`from '../components'`) pays for itself.
+  `pages/` deliberately does **not** get this: each page is wired into
+  `<feature-name>.routes.ts` via `loadComponent: () => import(...)` on its own file path —
+  an aggregator barrel would force a static import of every page into one chunk and defeat
+  that lazy-loading.
+- `pages/<page-name>/` holds the components a feature's routes actually load — the entry
+  points. Everything else the feature needs (a table, a card, a modal body) is a
+  `<component-name>/` folder under a sibling `components/` kind-folder, next to `pages/`,
+  not inside it. `components/` mirrors `pages/` and the other feature-root kind-folders
+  (`services/`, `interfaces/`, etc.) — every kind of feature-root content gets its own
+  folder, none of it sits flat. This is the one structural signal that tells `pages/` and
+  regular components apart; don't also rename entry components with a `-page` suffix on
+  top of the `pages/` folder — the folder location already says what it is, a suffix would
+  just repeat the same fact twice.
+- A feature-root subfolder (`interfaces/`, `types/`, `constants/`, `enums/`, `helpers/`,
+  `services/`) is only for something genuinely shared by 2+ components within that one
+  feature — a `missions-api.service.ts` used by both a page and a table, for instance. If
+  only one component uses it, it stays co-located inside that component's own subfolder
+  instead; promoting single-consumer code to the feature root just to "be safe" adds a level
+  of indirection nobody needs. If it turns out another *feature* needs it too, that's a
+  `shared/` promotion (with a doc entry), not a feature-root one — feature-root subfolders
+  are for intra-feature reuse only, never a way to dodge the `shared/` registry.
 - `core/` is for things that exist exactly once for the whole app (auth interceptor, root
   error handler) — not a dumping ground for "things that didn't fit elsewhere". Split by
   kind, same reasoning as the `shared/ui`/`shared/utilities` split: `guards/`,
@@ -104,6 +158,16 @@ src/
       folder.
 - [ ] Feature with its own routes has `<feature-name>.routes.ts` inside its folder — see
       `routing.md` — not routes inlined in `app.routes.ts`.
+- [ ] Every component in a feature — including the one(s) loaded by its routes — has its own
+      `<name>/` folder; no component's files sit flat directly under the feature root.
+- [ ] Routed entry components live under `pages/<page-name>/`; non-routed components live
+      under `components/<component-name>/`, a sibling kind-folder of `pages/`, not nested
+      inside it and not flat in the feature root.
+- [ ] `components/` has its own aggregator `index.ts` with explicit named exports of each
+      `<component-name>/` barrel; `pages/` does not have one.
+- [ ] A feature-root subfolder (`interfaces/`, `services/`, etc.) exists only for code shared
+      by 2+ components of that feature — single-consumer code stays co-located in its own
+      component instead, and cross-feature reuse goes through `shared/` with a doc entry.
 - [ ] Nothing added to `core/` that isn't a genuine app-wide singleton concern; guards,
       interceptors, and services each live in their own `core/<kind>/` subfolder.
 - [ ] No service mixes more than one unrelated responsibility — split by domain instead.

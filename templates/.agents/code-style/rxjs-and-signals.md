@@ -28,6 +28,39 @@ this.userService
   reuses the component instance across a params-only navigation.
 - Always clean up manual subscriptions with `takeUntilDestroyed()` if you can't avoid
   subscribing directly.
+- TypeScript doesn't narrow a signal call across repeated invocations — each call is a fresh
+  function call that could return a different value, so `if (this.signal1())` does not make
+  a later `this.signal1()` non-null. Read a signal more than once in a function (or test it
+  in an `if`), and bind it to a local first:
+
+```ts
+const value = this.signal1();
+if (value) value.field;
+```
+
+## Resource State
+
+- `resource()`/`rxResource()`/`httpResource()` already expose `isLoading()`, `error()`,
+  `hasValue()`, and `value()` — never hand-roll a parallel `loading`/`error` signal that you
+  set/clear yourself around the call. That's re-implementing state the resource already
+  tracks, and it drifts out of sync with the resource's real status.
+- Keep the resource itself `private`; expose what the template needs as `protected readonly`
+  `computed()`s built on top of it, so the template reads a signal, not the resource's raw
+  API surface:
+
+```ts
+private readonly userResource = rxResource({ loader: () => this.userApi.getUser() });
+
+protected readonly user = computed(() =>
+  this.userResource.hasValue() ? this.userResource.value() : null,
+);
+protected readonly isLoading = computed(() => this.userResource.isLoading());
+protected readonly loadError = computed(() => this.userResource.error());
+```
+
+- In the template, read `isLoading()`/`loadError()`/`user()` directly (with `@let` if a
+  given one is used more than once — see `component-structure.md`) instead of introducing
+  a fourth signal that mirrors combined state.
 
 ## Service Shape
 
@@ -98,9 +131,14 @@ longer keep it manageable — that's a decision worth an ADR (see `../decisions/
 ## Review Checklist
 
 - [ ] State is signals/computed/resource-based, not an RxJS store.
+- [ ] No hand-rolled `loading`/`error` signal duplicating a resource's own `isLoading()`/
+      `error()`; resource stays `private`, template reads `protected readonly computed()`s
+      built on the resource's native state.
 - [ ] Mutations use pipe-based error handling, not `.subscribe({ next, error })`.
 - [ ] No `Subject` used as a state store.
 - [ ] Reactive route params use `toSignal`, not a snapshot field initializer.
+- [ ] Signal read 2+ times in one function (or tested in an `if`) is bound to a local first,
+      not re-called.
 - [ ] Services expose readonly signals + command methods, not raw writable signals.
 - [ ] No signal-copying where `computed()` would do; `effect()` used only for boundary
       side effects.
