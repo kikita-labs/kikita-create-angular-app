@@ -58,6 +58,34 @@ protected readonly isLoading = computed(() => this.userResource.isLoading());
 protected readonly loadError = computed(() => this.userResource.error());
 ```
 
+- Same goes for the fetch itself: never hand-write a `private reloadX()` method that reads
+  signals, guards on them being set, and does `.pipe(catchError, finalize).subscribe(this.x.set)`
+  — that's a resource, manually reimplemented. Give the resource reactive `params` built from
+  the same signals and call `.reload()` (or just let a `params()` change re-trigger it):
+
+```ts
+private readonly detailsResource = rxResource({
+  params: () => {
+    const guildId = this.guildId();
+    const memberId = this.selectedMemberId();
+    return guildId && memberId ? { guildId, memberId } : undefined;
+  },
+  loader: ({ params }) =>
+    this.missionsApi.getPlayerDetails(params.guildId, params.memberId).pipe(
+      catchError(() => {
+        this.errorMessage.set(this.transloco.translate('details.failed'));
+        return of(null);
+      }),
+    ),
+});
+
+protected readonly details = computed(() => this.detailsResource.value());
+protected readonly loadingDetails = computed(() => this.detailsResource.isLoading());
+
+// to force a refetch with the same params, e.g. after a mutation:
+this.detailsResource.reload();
+```
+
 - In the template, read `isLoading()`/`loadError()`/`user()` directly (with `@let` if a
   given one is used more than once — see `component-structure.md`) instead of introducing
   a fourth signal that mirrors combined state.
@@ -134,6 +162,8 @@ longer keep it manageable — that's a decision worth an ADR (see `../decisions/
 - [ ] No hand-rolled `loading`/`error` signal duplicating a resource's own `isLoading()`/
       `error()`; resource stays `private`, template reads `protected readonly computed()`s
       built on the resource's native state.
+- [ ] No hand-written `reloadX()`/`fetchX()` method wrapping `subscribe` — use a resource's
+      reactive `params` + `.reload()` instead.
 - [ ] Mutations use pipe-based error handling, not `.subscribe({ next, error })`.
 - [ ] No `Subject` used as a state store.
 - [ ] Reactive route params use `toSignal`, not a snapshot field initializer.

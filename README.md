@@ -81,11 +81,32 @@ The agent will ask the pre-init questionnaire, then follow `plan.md` end to end:
 `angular-mcp`, scaffold the app, wire tooling, generate the `.agents/` doc tree, set up
 git, and run `checklist.md` before telling you it's done.
 
+## Update
+
+Already scaffolded a project with this skill and the templates have moved on since? Run the
+exact same command inside that project:
+
+```
+/kikita-create-angular-app
+```
+
+The skill detects `.agents/.kikita-scaffold.json` (written at scaffold time) and switches to
+update mode instead of re-running the questionnaire: it `git pull`s its own install directory,
+diffs `templates/.agents/` between the commit the project was scaffolded/last-updated from and
+the current `HEAD`, and merges what changed into the project's `.agents/` files — never a
+blind overwrite, since those files usually pick up project-specific edits after scaffolding.
+See [`update.md`](./update.md) for the exact algorithm.
+
+This works the same way whether you're driving Claude Code by hand or a fully agent-driven
+("vibecoding") workflow never opens the project directly — it's the same slash command either
+way, no separate `-update` skill to install or remember.
+
 ## Repo structure
 
 ```
-SKILL.md          # skill entry point: questionnaire + generation rules
+SKILL.md          # skill entry point: mode detection, questionnaire + generation rules
 plan.md           # step-by-step init sequence the skill follows
+update.md         # step-by-step sequence for updating an already-scaffolded project
 checklist.md       # post-init verification
 templates/         # everything copied into the generated project
   AGENTS.md, CLAUDE.md, .gitignore, .editorconfig, .prettierrc, .prettierignore,
@@ -95,5 +116,4 @@ templates/         # everything copied into the generated project
 
 ## License
 
-No license file yet — all rights reserved by default until one is added. Open an issue if
-you need a specific license for your use case.
+[MIT](./LICENSE)

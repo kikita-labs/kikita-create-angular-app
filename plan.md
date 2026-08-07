@@ -113,4 +113,11 @@ if a step doesn't apply (e.g. no UI library chosen), mark it skipped explicitly 
    - Only push if the git-policy answer authorizes it without asking; otherwise stop after
      the commit and ask before pushing.
 
-10. **Run `checklist.md`.** Fix anything that fails before reporting completion to the user.
+10. **Write the scaffold record**, `.agents/.kikita-scaffold.json` — the skill's own current
+    commit (`git -C <skill-dir> rev-parse HEAD`, resolved from the running skill's own install
+    location, not guessed) plus every questionnaire answer from step 1. `update.md` reads this
+    on a later run to know what's already applied and how to resolve gates/placeholders
+    without re-asking. Add this file to `.gitignore`-exceptions if needed — it must be
+    committed, not ignored, since it's how a future update run identifies the project.
+
+11. **Run `checklist.md`.** Fix anything that fails before reporting completion to the user.
