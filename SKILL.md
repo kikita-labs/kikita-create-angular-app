@@ -1,6 +1,6 @@
 ---
 name: kikita-create-angular-app
-description: Scaffold a new Angular project (latest stable) with a full .agents/ documentation tree, code style, MCP, and git policy pre-wired. Use when the user asks to init/bootstrap/create a new Angular app, or invokes /kikita-create-angular-app in an empty or near-empty directory.
+description: Scaffold a new Angular project (latest stable) with a full .agents/ documentation tree, code style, MCP, and git policy pre-wired — retrofit that same .agents/ tree onto an existing Angular project this skill didn't create — or, in a project this skill already scaffolded/adopted, pull and merge upstream .agents/ doc updates. Use when the user asks to init/bootstrap/create a new Angular app, invokes /kikita-create-angular-app in an empty or near-empty directory, asks to add/generate/retrofit AGENTS.md or .agents/ docs onto an existing Angular project, or asks to update/sync/refresh the project's agent docs / .agents/ conventions in a project this skill previously touched.
 ---
 
 # kikita-create-angular-app
@@ -9,15 +9,36 @@ Bootstraps a new Angular project and generates its `AGENTS.md` / `.agents/` docu
 tree so any AI agent (Claude Code, Codex, etc.) working in the project afterwards has a
 complete, self-maintaining source of truth.
 
-Follow `plan.md` step by step. Do not skip the questionnaire. Do not skip MCP install.
-When done, run through `checklist.md` before telling the user it's finished.
+## 0. Mode detection (always do this first)
 
-## 0. Preconditions
+Three possible states for the target directory — check in this order:
+
+1. **`.agents/.kikita-scaffold.json` present** → this project was already scaffolded or
+   adopted by this skill. Follow `update.md` — do not re-run the questionnaire, do not
+   re-scaffold, do not re-run `adopt.md`. `update.md` handles pulling the latest template,
+   diffing since the recorded commit, and merging changes into the project's (possibly
+   customized) `.agents/` files.
+2. **Empty or near-empty directory** (no `package.json`, no `angular.json`, nothing but
+   maybe a `.git/`/README the user just created) → fresh init. Continue with section 1
+   below, then `plan.md`.
+3. **Existing project, no scaffold record** (`package.json`/`angular.json` present, no
+   `.agents/.kikita-scaffold.json`) → this is someone else's (or an older, pre-this-skill)
+   Angular project. Do **not** run `plan.md` — it assumes an empty directory and will try to
+   `ng new` over a real project. Follow `adopt.md` instead: it generates the `.agents/` tree
+   against what's actually there, inferring questionnaire answers from the existing config
+   rather than scaffolding new tooling, and asks before changing anything that already exists.
+
+## 0.5 Preconditions (fresh init only)
 
 - Confirm the working directory is empty or the user explicitly wants to init here.
-- Never run this against a directory that already has an unrelated project without asking first.
+- If the directory turns out to be non-empty when you check, stop and re-route to case 3
+  above (`adopt.md`) instead of forcing the init path — don't ask the user to just "confirm
+  it's fine to init here" when what's actually needed is the adopt flow.
 
 ## 1. Questionnaire (always ask before touching the filesystem)
+
+Follow `plan.md` step by step from here. Do not skip the questionnaire. Do not skip MCP
+install. When done, run through `checklist.md` before telling the user it's finished.
 
 Ask the user, one round, all at once:
 
