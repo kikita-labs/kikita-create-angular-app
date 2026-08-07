@@ -7,10 +7,11 @@ src/
   assets/            # static files referenced from code/templates, served under /assets —
                       # images grouped by domain (assets/<domain>/), not dumped flat
   app/
-    core/            # app-wide singletons: guards, interceptors, root services
+    core/            # app-wide singletons: guards, interceptors, root services, tokens
       guards/        # route guards (CanActivateFn, etc.)
       interceptors/  # HttpInterceptorFn functions
       services/      # app-wide singleton services (@Service, providedIn: root)
+      tokens/        # InjectionToken/HttpContextToken used by core code, even single-consumer
       platform/      # SSR-safe browser-API adapters, if SSR was chosen — see platform-adapter.md
     shared/
       ui/            # reusable components/directives/pipes — see .agents/shared/README.md
@@ -139,7 +140,7 @@ src/
 - `core/` is for things that exist exactly once for the whole app (auth interceptor, root
   error handler) — not a dumping ground for "things that didn't fit elsewhere". Split by
   kind, same reasoning as the `shared/ui`/`shared/utilities` split: `guards/`,
-  `interceptors/`, `services/` (plus `platform/` if SSR). Don't leave singleton files flat
+  `interceptors/`, `services/`, `tokens/` (plus `platform/` if SSR). Don't leave singleton files flat
   directly under `core/` once there's more than one of a kind — one guard and one service
   in two different flat files is still "two kinds", not "not enough to bother splitting".
 - One responsibility per service (see `code-style/rxjs-and-signals.md`, "Service Shape") —
