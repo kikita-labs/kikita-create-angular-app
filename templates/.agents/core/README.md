@@ -1,7 +1,7 @@
 # Core
 
-Registry of `src/app/core/` singletons: app-wide services, guards, and interceptors that
-exist exactly once for the whole app. Not a dumping ground for "things that didn't fit
+Registry of `src/app/core/` singletons: app-wide services, guards, interceptors, and tokens
+that exist exactly once for the whole app. Not a dumping ground for "things that didn't fit
 elsewhere" — see `../architecture/folder-structure.md` for the boundary between `core/` and
 `shared/`.
 
@@ -11,12 +11,17 @@ elsewhere" — see `../architecture/folder-structure.md` for the boundary betwee
 | --- | --- | --- | --- | --- |
 | _(none yet)_ | | | | |
 
-Kind is one of: `service`, `guard`, `interceptor`.
+Kind is one of: `service`, `guard`, `interceptor`, `token`.
+
+An `InjectionToken`/`HttpContextToken` used by app-wide code (an interceptor, a core service)
+is `kind: token`, path `core/tokens/<name>.token.ts` — even if only one consumer uses it
+today. Don't colocate a token file inside `interceptors/`/`services/`; `tokens/` is its own
+kind, same as guards or services.
 
 ## Adding an entry
 
-1. Build it under `src/app/core/<kind>/` (`guards/`, `interceptors/`, or `services/` — see
-   `../architecture/folder-structure.md`).
+1. Build it under `src/app/core/<kind>/` (`guards/`, `interceptors/`, `services/`, or
+   `tokens/` — see `../architecture/folder-structure.md`).
 2. Add a row to the table above.
 3. If it has a non-trivial API or wiring (e.g. an interceptor's behavior, a service's
    public methods), create `.agents/core/<name>.md`. Simple guards/services can rely on the
