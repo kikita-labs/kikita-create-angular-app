@@ -95,7 +95,20 @@ this.detailsResource.reload();
 - One responsibility per service — a service that both fetches user data and manages
   toast notifications is two services wearing one name.
 - Expose `readonly` signals for state and plain methods for commands (`save()`,
-  `refresh()`) — never expose a raw `WritableSignal` for external code to `.set()` directly.
+  `refresh()`) — never expose a raw `WritableSignal` for external code to `.set()` directly:
+
+  ```ts
+  private readonly _items = signal<readonly Item[]>([]);
+  readonly items = this._items.asReadonly();
+
+  setItems(items: readonly Item[]): void {
+    this._items.set(items);
+  }
+  ```
+
+  A public field typed `WritableSignal<T>` on a service is always wrong — it hands every
+  consumer `.set()`/`.update()`, bypassing whatever invariant the service's own methods
+  enforce.
 - Use `effect()` only for actual side effects at a system boundary (syncing to
   `localStorage` via a platform adapter, logging, analytics) — not as a way to compute one
   piece of state from another. If you're tempted to `effect(() => this.b.set(f(this.a())))`,

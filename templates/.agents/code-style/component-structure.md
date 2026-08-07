@@ -13,7 +13,8 @@
 - `public` — intentional class API, meant to be used from outside the component.
 - `protected` — template-facing only; the template reads it, nothing outside the class
   should.
-- `private` — internal implementation detail.
+- `private` — internal implementation detail. Injected services are always `private` —
+  see "Member order" item 3 below for how to expose what the template needs from one.
 - Make injected dependencies, signals, inputs, outputs, and stable callbacks `readonly`
   unless reassignment is genuinely required.
 - Signal APIs only: `input()`/`model()`/`output()`. The legacy `@Input()`/`@Output()`/
@@ -103,7 +104,7 @@ readonly saved = output<void>();
 
 private readonly http = inject(HttpClient);
 
-protected readonly userService = inject(UserService);
+private readonly userService = inject(UserService);
 
 protected readonly staticValues = STATIC_VALUES;
 
