@@ -1,9 +1,13 @@
 # Routing
 
 - Route paths and route names are defined once as an enum, never repeated as string
-  literals across the codebase.
+  literals across the codebase. A route enum is multi-consumer by design — `.routes.ts`,
+  `routerLink` in templates, `router.navigate()` calls, guards — so it never lives inside a
+  `.routes.ts` file itself; it gets its own file under that scope's `enums/` kind-folder (see
+  `folder-structure.md`) and `.routes.ts` imports it from there.
 
 ```ts
+// app/enums/app-route.enum.ts
 export enum AppRoute {
   Home = 'home',
   UserProfile = 'user/:id',
@@ -12,14 +16,20 @@ export enum AppRoute {
 
 - Every feature under `features/<feature-name>/` owns its routes in a sibling
   `<feature-name>.routes.ts` — `app.routes.ts` never lists a feature's internal paths
-  directly, it only points at that file via `loadChildren`.
+  directly, it only points at that file via `loadChildren`. That feature's own route enum
+  lives in its own `enums/` kind-folder, not inline in `<feature-name>.routes.ts`.
 
 ```ts
-// features/user-profile/user-profile.routes.ts
+// features/user-profile/enums/user-profile-route.enum.ts
 export enum UserProfileRoute {
   Root = '',
   Edit = 'edit',
 }
+```
+
+```ts
+// features/user-profile/user-profile.routes.ts
+import { UserProfileRoute } from './enums';
 
 export const USER_PROFILE_ROUTES: Routes = [
   { path: UserProfileRoute.Root, loadComponent: () => import('./pages/user-profile-view/user-profile-view') },
@@ -34,10 +44,15 @@ it lives under `components/<component-name>/`, a sibling kind-folder of `pages/`
 by the page component itself, not by the router.
 
 ```ts
-// features/home/home.routes.ts
+// features/home/enums/home-route.enum.ts
 export enum HomeRoute {
   Root = '',
 }
+```
+
+```ts
+// features/home/home.routes.ts
+import { HomeRoute } from './enums';
 
 export const HOME_ROUTES: Routes = [
   { path: HomeRoute.Root, loadComponent: () => import('./pages/home/home') },
@@ -46,10 +61,7 @@ export const HOME_ROUTES: Routes = [
 
 ```ts
 // app.routes.ts
-export enum AppRoute {
-  Home = 'home',
-  UserProfile = 'user',
-}
+import { AppRoute } from './enums';
 
 export const routes: Routes = [
   { path: AppRoute.Home, loadChildren: () => import('./features/home/home.routes').then((m) => m.HOME_ROUTES) },
@@ -78,6 +90,8 @@ tends to grow, and a routing file for every feature is one less thing to restruc
 ## Review Checklist
 
 - [ ] No raw route-path string literals outside the enum definition.
+- [ ] A route enum never lives inline inside a `.routes.ts` file — it has its own file under
+      that scope's `enums/` kind-folder, imported from `.routes.ts`.
 - [ ] New feature routes are lazy-loaded.
 - [ ] Every feature under `features/<feature-name>/` — including a single-route one — has
       its own `<feature-name>.routes.ts`, referenced from `app.routes.ts` via `loadChildren`.

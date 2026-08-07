@@ -49,6 +49,7 @@ src/
             <component-name>.ts
             <component-name>.html
             <component-name>.{{CSS_EXT}}
+    enums/           # app-wide enums (e.g. AppRoute) — not tied to one feature, see routing.md
     app.routes.ts
     app.config.ts
   styles/
@@ -85,6 +86,11 @@ src/
   schematics expect. Don't nest them under a `bootstrap/` folder; that adds indirection
   with no benefit for a single-app project (it would only start paying off in a multi-app
   monorepo, which this skill doesn't support — see `SKILL.md`).
+- `app/enums/` holds enums with no single feature owner — `AppRoute` is the main example.
+  It's multi-consumer by nature (`app.routes.ts`, `routerLink`, `router.navigate()`, guards),
+  so it never lives inline in `app.routes.ts` — see `routing.md`. A feature-scoped route enum
+  (`UserProfileRoute`, etc.) follows the same reasoning one level down, in that feature's own
+  `enums/` kind-folder — not in `app/enums/`, and not inline in `<feature-name>.routes.ts`.
 - `shared/` splits by dependency shape, not just "reusable": `ui/` holds anything with an
   Angular decorator (component, directive, pipe) — template-facing, DI-aware. `utilities/`
   holds plain functions/classes with zero Angular imports — anything under `core/`,
@@ -157,6 +163,9 @@ src/
 - [ ] Nothing under `shared/utilities/` imports from `@angular/*`.
 - [ ] `app.routes.ts`/`app.config.ts` stay at `src/app/`, not moved into a `bootstrap/`
       folder.
+- [ ] App-wide enums (e.g. `AppRoute`) live in `app/enums/`, not inline in `app.routes.ts`;
+      feature-scoped route enums live in that feature's own `enums/`, not inline in
+      `<feature-name>.routes.ts`.
 - [ ] Feature with its own routes has `<feature-name>.routes.ts` inside its folder — see
       `routing.md` — not routes inlined in `app.routes.ts`.
 - [ ] Every component in a feature — including the one(s) loaded by its routes — has its own
