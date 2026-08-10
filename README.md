@@ -119,23 +119,6 @@ This works the same way whether you're driving the agent by hand or a fully agen
 ("vibecoding") workflow never opens the project directly — it's the same slash command either
 way, no separate `-update` skill to install or remember.
 
-## Repo structure
-
-```
-plugin.json         # Agent Plugins manifest (name, version, metadata) — see agent-plugins.org
-skills/
-  kikita-create-angular-app/
-    SKILL.md          # skill entry point: mode detection, questionnaire + generation rules
-    plan.md           # step-by-step init sequence the skill follows
-    update.md         # step-by-step sequence for updating an already-scaffolded project
-    adopt.md          # step-by-step sequence for retrofitting docs onto an existing project
-    checklist.md      # post-init verification
-    templates/        # everything copied into the generated project
-      AGENTS.md, CLAUDE.md, .gitignore, .editorconfig, .prettierrc, .prettierignore,
-      .nvmrc, .vscode/extensions.json
-      .agents/          # the documentation tree template, mirrors what gets generated
-```
-
 No `mcp.json` at the plugin root: `angular-mcp` is installed *into the generated project*
 by `plan.md`, not run as an MCP server for this skill itself.
 
