@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "kikita-create-angular-app",
+  "version": "1.0.0",
+  "description": "Scaffold a new Angular project with a full .agents/ documentation tree, or retrofit/update that tree on an existing Angular project.",
+  "homepage": "https://github.com/kikita-labs/kikita-create-angular-app",
+  "repository": "https://github.com/kikita-labs/kikita-create-angular-app",
+  "license": "MIT",
+  "keywords": ["angular", "scaffold", "agents", "documentation", "skill"]
+}

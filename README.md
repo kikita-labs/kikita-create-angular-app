@@ -5,14 +5,19 @@ full `.agents/` documentation tree alongside it — code style, architecture, gi
 MCP setup, testing/quality gate, and reuse registries — so any AI agent working in the
 project afterwards has a complete, self-maintaining source of truth from commit one.
 
-See [`SKILL.md`](./SKILL.md) for what it does, [`plan.md`](./plan.md) for the exact
-step-by-step scaffolding sequence, and [`checklist.md`](./checklist.md) for the
-post-init verification it runs before handing the project back to you.
+Packaged as an [Agent Plugin](https://agent-plugins.org) (spec v1.0.0) — a portable format
+usable by any compatible client (Cursor, GitHub Copilot, ChatGPT/Codex, VS Code, Kiro, …),
+not just Claude Code.
+
+See [`skills/kikita-create-angular-app/SKILL.md`](./skills/kikita-create-angular-app/SKILL.md)
+for what it does, [`plan.md`](./skills/kikita-create-angular-app/plan.md) for the exact
+step-by-step scaffolding sequence, and [`checklist.md`](./skills/kikita-create-angular-app/checklist.md)
+for the post-init verification it runs before handing the project back to you.
 
 ## What it generates
 
 - `CLAUDE.md` → `AGENTS.md` → `.agents/*.md` — the full documentation tree, described in
-  [`templates/.agents/README.md`](./templates/.agents/README.md).
+  [`templates/.agents/README.md`](./skills/kikita-create-angular-app/templates/.agents/README.md).
 - A working Angular app: latest stable Angular CLI, signals/Signal Forms/`@Service`
   throughout, ESLint + Prettier + Husky pre-wired, `angular-mcp` installed first.
 - A short pre-init questionnaire (CSS engine, UI library, tests, SSR, i18n, JSDoc policy,
@@ -21,24 +26,35 @@ post-init verification it runs before handing the project back to you.
 
 ## Install
 
-This is a skill for AI coding agents (Claude Code, Codex). Installing it means placing
-this repo's contents under a `<skill-name>/` folder inside the agent's skills directory,
-so the folder name matches this repo's name.
+This repo is an [Agent Plugin](https://agent-plugins.org): a `plugin.json` manifest at the
+root plus a `skills/kikita-create-angular-app/` directory holding the actual
+[Agent Skill](https://agent-plugins.org/specification). Any Agent-Plugins-compatible client
+can load it straight from a clone of this repo.
+
+### Agent-Plugins-compatible clients (Cursor, GitHub Copilot, ChatGPT/Codex, VS Code, Kiro, …)
+
+Point the client's plugin install flow at this repo (clone URL or local path). The client
+discovers `plugin.json`, then the skill under `skills/kikita-create-angular-app/`. Refer to
+your client's own docs for the exact install command — the Agent Plugins spec defines the
+package format, not a universal installer.
 
 ### Claude Code
+
+Claude Code doesn't read the Agent Plugins format natively yet, so install the skill
+subdirectory directly:
 
 **Personal (all your projects):**
 
 ```sh
-git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
-  ~/.claude/skills/kikita-create-angular-app
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git /tmp/kikita-cli-app && \
+  cp -r /tmp/kikita-cli-app/skills/kikita-create-angular-app ~/.claude/skills/kikita-create-angular-app
 ```
 
 **Project-scoped (this project only, committed to the repo):**
 
 ```sh
-git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
-  .claude/skills/kikita-create-angular-app
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git /tmp/kikita-cli-app && \
+  cp -r /tmp/kikita-cli-app/skills/kikita-create-angular-app .claude/skills/kikita-create-angular-app
 ```
 
 Claude Code picks up new/changed skills under `~/.claude/skills/` and `.claude/skills/`
@@ -54,15 +70,15 @@ incorrect claim floating around. The real locations, per Codex's own docs:
 **User scope (all your projects):**
 
 ```sh
-git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
-  "$HOME/.agents/skills/kikita-create-angular-app"
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git /tmp/kikita-cli-app && \
+  cp -r /tmp/kikita-cli-app/skills/kikita-create-angular-app "$HOME/.agents/skills/kikita-create-angular-app"
 ```
 
 **Repo scope (this project, and any subdirectory under it):**
 
 ```sh
-git clone https://github.com/kikita-labs/kikita-create-angular-app.git \
-  .agents/skills/kikita-create-angular-app
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git /tmp/kikita-cli-app && \
+  cp -r /tmp/kikita-cli-app/skills/kikita-create-angular-app .agents/skills/kikita-create-angular-app
 ```
 
 Codex scans `.agents/skills` in the current directory and every parent up to the repo
@@ -92,27 +108,36 @@ exact same command inside that project:
 
 The skill detects `.agents/.kikita-scaffold.json` (written at scaffold time) and switches to
 update mode instead of re-running the questionnaire: it `git pull`s its own install directory,
-diffs `templates/.agents/` between the commit the project was scaffolded/last-updated from and
-the current `HEAD`, and merges what changed into the project's `.agents/` files — never a
-blind overwrite, since those files usually pick up project-specific edits after scaffolding.
-See [`update.md`](./update.md) for the exact algorithm.
+diffs `skills/kikita-create-angular-app/templates/.agents/` between the commit the project was
+scaffolded/last-updated from and the current `HEAD`, and merges what changed into the
+project's `.agents/` files — never a blind overwrite, since those files usually pick up
+project-specific edits after scaffolding. See [`update.md`](./skills/kikita-create-angular-app/update.md)
+for the exact algorithm. Note this requires a git-clone install (not a copy) so `<plugin-root>`
+has history to diff against — see `update.md` section 1.
 
-This works the same way whether you're driving Claude Code by hand or a fully agent-driven
+This works the same way whether you're driving the agent by hand or a fully agent-driven
 ("vibecoding") workflow never opens the project directly — it's the same slash command either
 way, no separate `-update` skill to install or remember.
 
 ## Repo structure
 
 ```
-SKILL.md          # skill entry point: mode detection, questionnaire + generation rules
-plan.md           # step-by-step init sequence the skill follows
-update.md         # step-by-step sequence for updating an already-scaffolded project
-checklist.md       # post-init verification
-templates/         # everything copied into the generated project
-  AGENTS.md, CLAUDE.md, .gitignore, .editorconfig, .prettierrc, .prettierignore,
-  .nvmrc, .vscode/extensions.json
-  .agents/          # the documentation tree template, mirrors what gets generated
+plugin.json         # Agent Plugins manifest (name, version, metadata) — see agent-plugins.org
+skills/
+  kikita-create-angular-app/
+    SKILL.md          # skill entry point: mode detection, questionnaire + generation rules
+    plan.md           # step-by-step init sequence the skill follows
+    update.md         # step-by-step sequence for updating an already-scaffolded project
+    adopt.md          # step-by-step sequence for retrofitting docs onto an existing project
+    checklist.md      # post-init verification
+    templates/        # everything copied into the generated project
+      AGENTS.md, CLAUDE.md, .gitignore, .editorconfig, .prettierrc, .prettierignore,
+      .nvmrc, .vscode/extensions.json
+      .agents/          # the documentation tree template, mirrors what gets generated
 ```
+
+No `mcp.json` at the plugin root: `angular-mcp` is installed *into the generated project*
+by `plan.md`, not run as an MCP server for this skill itself.
 
 ## License
 
