@@ -31,9 +31,60 @@ CSS engine: {{CSS}}.
   of these tokens — see `ui-library-usage.md`.
 <!-- SCAFFOLD: keep only if SCSS was chosen -->
 - SCSS is an authoring convenience (nesting, mixins, functions) — it compiles to the same
-  layered CSS; it is not a separate runtime theme mechanism. Keep mixins under
-  `src/styles/mixins/` with a barrel-style single entry import, same discipline as
-  `index.ts` barrels for TS.
+  layered CSS; it is not a separate runtime theme mechanism. Use `@use`/`@forward`, never
+  the deprecated `@import` — this is a Sass-only rule, native CSS has no module system to
+  choose between.
+- Any grouped set of partials (mixins, tokens, third-party overrides) lives in its own
+  folder under `src/styles/`, with a barrel `_index.scss` that re-exports the folder's
+  partials via `@forward` — same discipline as `index.ts` barrels for TS. Reach for the
+  folder+barrel form as soon as a category has room to grow (more than one file's worth of
+  content expected over time), not only once it already has 3-4 files — migrating a flat
+  partial into a folder later means rewriting every direct import of it. A category that's
+  genuinely one-off and won't grow (e.g. a single z-index scale) can stay a flat
+  `_name.scss` file instead.
+- Group partials by meaning, not one-mixin/one-token-per-file — `_button-mixins.scss`,
+  `_color-tokens.scss`, not a file per individual mixin or token.
+- Example shape:
+
+  ```
+  src/
+    styles.scss
+    styles/
+      mixins/
+        _button-mixins.scss
+        _layout-mixins.scss
+        _index.scss
+      tokens/
+        _color-tokens.scss
+        _font-tokens.scss
+        _layout-tokens.scss
+        _index.scss
+      ui-kit-overrides/
+        _button.scss
+        _index.scss
+  ```
+
+  Each folder's `_index.scss` only `@forward`s its siblings:
+
+  ```scss
+  // styles/tokens/_index.scss
+  @forward './color-tokens';
+  @forward './font-tokens';
+  @forward './layout-tokens';
+  ```
+
+  `styles.scss` (the single entrypoint) then `@use`s each folder once, with an explicit
+  namespace:
+
+  ```scss
+  @use './styles/mixins' as mixins;
+  @use './styles/tokens' as tokens;
+  @use './styles/ui-kit-overrides';
+  ```
+- Partials are `@use`d only from `styles.scss` (the single entrypoint) or from another
+  partial that's itself reached from it — never directly from a component stylesheet. A
+  component importing a partial straight from `src/styles/` bypasses the single-entrypoint
+  contract and can duplicate the partial's output into the component's own CSS bundle.
 - One single entrypoint stylesheet imports every layer file, in layer-declaration order.
   Don't scatter ad-hoc `<style>` imports that bypass it.
 - No inline styles (`[style]` binding or `style="..."` attribute) in templates. They bypass
@@ -53,6 +104,10 @@ CSS engine: {{CSS}}.
 - [ ] No hand-rolled `font-size`/`line-height` per component — typography goes through
       `styles/typography.{{CSS_EXT}}` tokens, or the UI library's typography primitive if
       one was chosen.
+<!-- SCAFFOLD: keep this bullet only if SCSS was chosen -->
+- [ ] SCSS partials use `@use`/`@forward`, never `@import`; a grouped category (mixins,
+      tokens, overrides) is a folder with a `_index.scss` barrel, not loose flat files once
+      it has room to grow. No component stylesheet `@use`s a partial directly.
 
 <!-- SCAFFOLD: keep this whole block only if CSS=Tailwind -->
 - Styling is utility-first: compose Tailwind classes directly in templates instead of
