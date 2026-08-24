@@ -5,9 +5,9 @@ full `.agents/` documentation tree alongside it — code style, architecture, gi
 MCP setup, testing/quality gate, and reuse registries — so any AI agent working in the
 project afterwards has a complete, self-maintaining source of truth from commit one.
 
-Packaged as an [Agent Plugin](https://agent-plugins.org) (spec v1.0.0) — a portable format
-usable by any compatible client (Cursor, GitHub Copilot, ChatGPT/Codex, VS Code, Kiro, …),
-not just Claude Code.
+Packaged as an [Agent Skill](https://agentskills.io) — an open, portable format usable by
+any compatible client (Claude Code, Codex, Cursor, GitHub Copilot, VS Code, Kiro, …), not
+just one product.
 
 See [`skills/kikita-create-angular-app/SKILL.md`](./skills/kikita-create-angular-app/SKILL.md)
 for what it does, [`plan.md`](./skills/kikita-create-angular-app/plan.md) for the exact
@@ -26,64 +26,83 @@ for the post-init verification it runs before handing the project back to you.
 
 ## Install
 
-This repo is an [Agent Plugin](https://agent-plugins.org): a `plugin.json` manifest at the
-root plus a `skills/kikita-create-angular-app/` directory holding the actual
-[Agent Skill](https://agent-plugins.org/specification). Any Agent-Plugins-compatible client
-can load it straight from a clone of this repo.
+This repo follows the [Agent Skills spec](https://agentskills.io/specification): the actual
+skill is the `skills/kikita-create-angular-app/` directory, with `SKILL.md` at its root. The
+spec doesn't define an update mechanism, so this skill's own `update.md` falls back to git:
+it walks up from wherever `SKILL.md` is running to find a `.git`, then diffs against
+upstream. That means the installed skill folder must still be inside a real git clone — a
+bare `cp` that drops `.git` breaks updates silently (see the Update section below).
 
-### Agent-Plugins-compatible clients (Cursor, GitHub Copilot, ChatGPT/Codex, VS Code, Kiro, …)
-
-Point the client's plugin install flow at this repo (clone URL or local path). The client
-discovers `plugin.json`, then the skill under `skills/kikita-create-angular-app/`. Refer to
-your client's own docs for the exact install command — the Agent Plugins spec defines the
-package format, not a universal installer.
+Since clients expect `SKILL.md` directly at the top of the installed skill folder, but the
+clone's `SKILL.md` sits one level down (`skills/kikita-create-angular-app/`), install by
+cloning the repo to a fixed source location once, then linking the client's skills folder to
+the subdirectory inside it — a symlink (or, on Windows, a directory junction, which unlike a
+symlink needs no admin rights) keeps `.git` reachable through the link.
 
 ### Claude Code
 
-Claude Code doesn't read the Agent Plugins format natively yet, so install the skill
-subdirectory directly:
-
-**Personal (all your projects):**
+**Personal (all your projects), macOS/Linux:**
 
 ```sh
-git clone https://github.com/kikita-labs/kikita-create-angular-app.git /tmp/kikita-cli-app && \
-  cp -r /tmp/kikita-cli-app/skills/kikita-create-angular-app ~/.claude/skills/kikita-create-angular-app
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git ~/.kikita-create-angular-app-src
+ln -s ~/.kikita-create-angular-app-src/skills/kikita-create-angular-app ~/.claude/skills/kikita-create-angular-app
 ```
 
-**Project-scoped (this project only, committed to the repo):**
+**Personal, Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git "$HOME\.kikita-create-angular-app-src"
+New-Item -ItemType Junction -Path "$HOME\.claude\skills\kikita-create-angular-app" -Target "$HOME\.kikita-create-angular-app-src\skills\kikita-create-angular-app"
+```
+
+**Project-scoped (this project only, committed to the repo), macOS/Linux:**
 
 ```sh
-git clone https://github.com/kikita-labs/kikita-create-angular-app.git /tmp/kikita-cli-app && \
-  cp -r /tmp/kikita-cli-app/skills/kikita-create-angular-app .claude/skills/kikita-create-angular-app
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git .kikita-create-angular-app-src
+ln -s ../../.kikita-create-angular-app-src/skills/kikita-create-angular-app .claude/skills/kikita-create-angular-app
 ```
 
-Claude Code picks up new/changed skills under `~/.claude/skills/` and `.claude/skills/`
-live, within the current session — no restart needed, unless the top-level `.claude/skills/`
+Add `.kikita-create-angular-app-src/` to the project's `.gitignore` (it's a vendored clone,
+not this project's own source) — commit only the symlink/junction under `.claude/skills/`.
+
+Claude Code picks up new/changed skills under `~/.claude/skills/` and `.claude/skills/` live,
+within the current session — no restart needed, unless the top-level `.claude/skills/`
 directory didn't exist yet when the session started (in that case restart once so Claude
 Code starts watching the new directory).
 
 ### Codex
 
 Codex does **not** use `$CODEX_HOME` or `.codex/skills` for skills — that's a common but
-incorrect claim floating around. The real locations, per Codex's own docs:
+incorrect claim floating around. The real locations, per Codex's own docs, same
+clone-then-link pattern as above:
 
-**User scope (all your projects):**
-
-```sh
-git clone https://github.com/kikita-labs/kikita-create-angular-app.git /tmp/kikita-cli-app && \
-  cp -r /tmp/kikita-cli-app/skills/kikita-create-angular-app "$HOME/.agents/skills/kikita-create-angular-app"
-```
-
-**Repo scope (this project, and any subdirectory under it):**
+**User scope (all your projects), macOS/Linux:**
 
 ```sh
-git clone https://github.com/kikita-labs/kikita-create-angular-app.git /tmp/kikita-cli-app && \
-  cp -r /tmp/kikita-cli-app/skills/kikita-create-angular-app .agents/skills/kikita-create-angular-app
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git ~/.kikita-create-angular-app-src
+ln -s ~/.kikita-create-angular-app-src/skills/kikita-create-angular-app "$HOME/.agents/skills/kikita-create-angular-app"
 ```
+
+**Repo scope (this project, and any subdirectory under it), macOS/Linux:**
+
+```sh
+git clone https://github.com/kikita-labs/kikita-create-angular-app.git .kikita-create-angular-app-src
+ln -s ../.kikita-create-angular-app-src/skills/kikita-create-angular-app .agents/skills/kikita-create-angular-app
+```
+
+On Windows use `New-Item -ItemType Junction` as shown for Claude Code above, pointed at
+`.agents/skills/kikita-create-angular-app` instead.
 
 Codex scans `.agents/skills` in the current directory and every parent up to the repo
 root, so this also works from a subfolder of a larger repo. If a newly installed or
 updated skill doesn't show up, restart Codex.
+
+### Other Agent-Skills-compatible clients
+
+Any client that implements the [Agent Skills spec](https://agentskills.io/specification) can
+load the skill straight from `skills/kikita-create-angular-app/` in a clone of this repo —
+refer to that client's own docs for its install command, since the spec defines the skill
+folder format, not a universal installer.
 
 ## Use
 
@@ -107,20 +126,21 @@ exact same command inside that project:
 ```
 
 The skill detects `.agents/.kikita-scaffold.json` (written at scaffold time) and switches to
-update mode instead of re-running the questionnaire: it `git pull`s its own install directory,
+update mode instead of re-running the questionnaire: it `git pull`s its own source clone,
 diffs `skills/kikita-create-angular-app/templates/.agents/` between the commit the project was
 scaffolded/last-updated from and the current `HEAD`, and merges what changed into the
 project's `.agents/` files — never a blind overwrite, since those files usually pick up
 project-specific edits after scaffolding. See [`update.md`](./skills/kikita-create-angular-app/update.md)
-for the exact algorithm. Note this requires a git-clone install (not a copy) so `<plugin-root>`
-has history to diff against — see `update.md` section 1.
+for the exact algorithm. This is why the Install section above always clones (never `cp`s) —
+without a `.git` reachable from the installed skill folder, `update.md` has nothing to diff
+against and update mode can't run.
 
 This works the same way whether you're driving the agent by hand or a fully agent-driven
 ("vibecoding") workflow never opens the project directly — it's the same slash command either
 way, no separate `-update` skill to install or remember.
 
-No `mcp.json` at the plugin root: `angular-mcp` is installed *into the generated project*
-by `plan.md`, not run as an MCP server for this skill itself.
+No MCP server for this skill itself: `angular-mcp` is installed *into the generated project*
+by `plan.md`, not run against this repo.
 
 ## License
 
