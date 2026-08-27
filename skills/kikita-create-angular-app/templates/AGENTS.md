@@ -44,9 +44,10 @@ also read:
   opt out explicitly with `ChangeDetectionStrategy.Eager` and say why in a comment — don't
   silently rely on non-OnPush behavior.
 - Signals everywhere: `input()`/`model()`/`output()`/`viewChild()`/`contentChild()`, never
-  the legacy `@Input`/`@Output`/`@ViewChild`/`@ContentChild` decorators. Forms use Signal
-  Forms (`form()`), not Reactive Forms or `ngModel`. See
-  `.agents/code-style/component-structure.md`.
+  the legacy `@Input`/`@Output`/`@ViewChild`/`@ContentChild` decorators. New forms use Signal
+  Forms (`form()` + `[formField]`); `ngModel` is reserved for genuinely standalone controls,
+  and Reactive Forms remain only at intentional legacy or unsupported integration boundaries.
+  See `.agents/code-style/component-structure.md` and `.agents/code-style/forms-and-inputs.md`.
 - CSS: {{CSS}}. Never hardcode sizes or colors in a component; use the design-token
   variables described in `.agents/code-style/component-structure.md`.
 <!-- SCAFFOLD: keep the next line only if a UI library was chosen -->
