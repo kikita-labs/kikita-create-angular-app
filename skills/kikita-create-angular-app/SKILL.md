@@ -3,7 +3,7 @@ name: kikita-create-angular-app
 description: Scaffold a new Angular project (latest stable) with a full .agents/ documentation tree, code style, MCP, and git policy pre-wired — retrofit that same .agents/ tree onto an existing Angular project this skill didn't create — or, in a project this skill already scaffolded/adopted, pull and merge upstream .agents/ doc updates. Use when the user asks to init/bootstrap/create a new Angular app, invokes /kikita-create-angular-app in an empty or near-empty directory, asks to add/generate/retrofit AGENTS.md or .agents/ docs onto an existing Angular project, or asks to update/sync/refresh the project's agent docs / .agents/ conventions in a project this skill previously touched.
 license: MIT
 metadata:
-  version: "2.1.0"
+  version: "2.1.1"
   homepage: "https://github.com/kikita-labs/kikita-create-angular-app"
 ---
 
