@@ -32,6 +32,7 @@ src/
             constants/
             enums/
             helpers/
+            services/          # services used only by this page component
             tokens/
             <page-name>.ts
             <page-name>.html
@@ -45,6 +46,7 @@ src/
             constants/
             enums/
             helpers/
+            services/          # services used only by this component
             tokens/
             <component-name>.ts
             <component-name>.html

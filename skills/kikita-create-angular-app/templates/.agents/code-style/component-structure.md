@@ -198,6 +198,9 @@ componentName/
     helper1.ts
     componentName.schema.ts  # only for a component that owns a Signal Form, see below
     index.ts
+  services/
+    service1.ts              # only for this component; shared services live at feature level
+    index.ts
   tokens/
     token1.ts        # every token ships with a provider function alongside it
     index.ts
@@ -220,6 +223,9 @@ componentName/
   the component file" `helpers/` is for, not a public cross-component contract. See
   `forms-and-inputs.md` for what goes in it and where the form model's default-state
   constant goes instead (`constants/`, not the schema file).
+- A service used only by one component lives in that component's `services/` subfolder. If two
+  or more components in the feature use it, move it to the feature's `services/` folder; do
+  not promote it to `shared/` unless another feature genuinely needs it.
 
 - Decomposition is mandatory. Budgets: component/page TypeScript file ~150 lines target,
   200 hard-review threshold; template ~120 lines; stylesheet ~160 lines; a single function
@@ -286,7 +292,7 @@ componentName/
       calls.
 - [ ] Value tested and used inside `@if` bound via `@if (...; as x)` instead of re-reading
       it.
-- [ ] Every subfolder has a barrel `index.ts`.
+- [ ] Every subfolder, including `services/` when present, has a barrel `index.ts`.
 - [ ] Class name has no `Component`/`Directive`/`Pipe`/`Service` suffix, matching the file
       name convention — not just the file, the class too.
 - [ ] Dialog/drawer component's `injectXxx()` opener is a flat `componentName.opener.ts`
